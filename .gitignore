@@ -8,6 +8,9 @@
 *.so
 *.dylib
 
+# Compiled File
+hopper
+
 # Test binary, built with `go test -c`
 *.test
 
