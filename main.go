@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"github.com/hoppermq/hopper/internal/config"
+)
+
+const appName = "Hopper";
 
 func main() {
-  fmt.Println("Hello Hopper's")
+  _, err := config.New(appName);
+  if err != nil {
+    panic(err)
+  }
 }
