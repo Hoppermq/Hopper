@@ -28,6 +28,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/zixyos/glog v0.0.0-20250115212722-50b09311b91f // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
