@@ -4,7 +4,6 @@ package config
 import (
 	"embed"
 	"fmt"
-	"log/slog"
 	"os"
 	"strings"
 
@@ -34,7 +33,6 @@ type config struct {
 	configLoader *koanf.Koanf
 	fs           *embed.FS
 	fname        string
-	logger       *slog.Logger
 }
 
 func loader(target interface{}, options ...Option) error {

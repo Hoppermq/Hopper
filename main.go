@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 
+	"github.com/hoppermq/hopper/internal/application"
 	"github.com/hoppermq/hopper/internal/config"
 	"github.com/zixyos/glog"
 )
@@ -14,6 +15,7 @@ func main() {
   if err != nil {
     panic(err)
   }
+
   logger, err := glog.New(
     glog.WithLevel(slog.LevelDebug),
     glog.WithFormat(glog.TextFormatter),
@@ -28,5 +30,8 @@ func main() {
     panic(err)
   }
 
-  logger.Info("Hey Welcome to HOPPER")
+  logger.Info("Hey Welcome to HOPPER");
+  application.New(
+    application.WithLogger(logger),
+  ).Start();
 }
