@@ -6,6 +6,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/lipgloss v0.10.0 // indirect
 	github.com/charmbracelet/log v0.4.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
@@ -23,7 +24,15 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/zixyos/glog v0.0.0-20250115212722-50b09311b91f // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
+	golang.org/x/mod v0.22.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/tools v0.29.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
