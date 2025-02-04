@@ -2,6 +2,7 @@
 package application
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -16,6 +17,7 @@ type Application struct {
 
 	logger *slog.Logger
 
+  service Service
   running chan bool
   stop chan os.Signal
 }
@@ -27,6 +29,12 @@ type Option func(*Application);
 func WithLogger(logger *slog.Logger) Option {
   return func(a *Application) {
     a.logger = logger
+  }
+}
+
+func WithService(service Service) Option {
+  return func(a *Application) {
+    a.service = service
   }
 }
 
@@ -48,8 +56,17 @@ func New(opts ...Option) *Application {
 }
 
 func (a *Application) Start() {
-  a.logger.Info("HOPPER STARTED")
+  a.logger.Info("Application STARTED")
+  ctx := context.Background();
   signal.Notify(a.stop, syscall.SIGINT, syscall.SIGTERM)
+
+  go func() {
+    if err := a.service.Run(ctx); err != nil {
+      a.logger.Error("Failed to start component: ", a.service.Name(), err)
+      a.stop <- syscall.SIGTERM
+    }
+  }()
+
   a.running <- true;
   <- a.stop;
 }
