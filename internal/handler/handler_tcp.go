@@ -1,4 +1,4 @@
-package internal
+package handler
 
 import (
 	"context"
@@ -9,16 +9,25 @@ import (
 // TCP is an TCP handler
 type TCP struct {
   Listener net.Listener
-  logger slog.Logger
+  logger *slog.Logger
 }
 
 
 type config struct {
   lconf net.ListenConfig
   ctx context.Context
+  logger *slog.Logger
 }
 
 type Option func(*config) error
+
+func WithLogger(logger *slog.Logger) Option {
+  return func(c *config) error {
+    c.logger = logger
+
+    return nil
+  }
+}
 
 func WithListener(listenerConfig net.ListenConfig) Option {
   return func(c *config) error {
@@ -50,7 +59,31 @@ func NewTCP(opts ...Option) (*TCP, error) {
 
   return &TCP{
     Listener: l,
+    logger: handlerConfig.logger,
   }, nil
 }
 
-// here we will handle all command injected in the register
+func (t *TCP) handleConnection() error {
+  for {
+    conn, err := t.Listener.Accept();
+    if err != nil {
+      t.logger.Error("failed to accept connection", err)
+      return err
+    }
+    go t.processConnection(conn);
+  }
+
+}
+
+func (t *TCP) processConnection(conn net.Conn) {
+  defer conn.Close()
+}
+
+func (t *TCP) Start(_ context.Context) error {
+  go t.handleConnection();
+  return nil
+}
+
+func (t *TCP) Stop() error {
+  return t.Listener.Close() 
+}
