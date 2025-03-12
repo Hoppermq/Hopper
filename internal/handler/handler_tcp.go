@@ -63,7 +63,7 @@ func NewTCP(opts ...Option) (*TCP, error) {
   }, nil
 }
 
-func (t *TCP) handleConnection() error {
+func (t *TCP) HandleConnection(ctx context.Context) error {
   for {
     conn, err := t.Listener.Accept();
     if err != nil {
@@ -72,18 +72,8 @@ func (t *TCP) handleConnection() error {
     }
     go t.processConnection(conn);
   }
-
 }
 
 func (t *TCP) processConnection(conn net.Conn) {
-  defer conn.Close()
-}
-
-func (t *TCP) Start(_ context.Context) error {
-  go t.handleConnection();
-  return nil
-}
-
-func (t *TCP) Stop() error {
-  return t.Listener.Close() 
+  
 }
