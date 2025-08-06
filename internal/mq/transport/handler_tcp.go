@@ -1,15 +1,26 @@
-package transport
+package handler
 
 import (
 	"context"
 	"log/slog"
 	"net"
+	"sync"
+	"time"
+
+	"github.com/hoppermq/hopper/internal/mq/core"
 )
 
 // TCP is an TCP handler
 type TCP struct {
 	Listener net.Listener
 	logger   *slog.Logger
+
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
+
+	broker *core.Broker
+	cm     *core.ClientManager
 }
 
 type config struct {
@@ -62,27 +73,84 @@ func NewTCP(opts ...Option) (*TCP, error) {
 	}, nil
 }
 
-func (t *TCP) Start(ctx context.Context) error {
-	t.logger.Info("Starting TCP Component")
-	return nil
-}
-
-func (t *TCP) Stop(ctx context.Context) error {
-	t.logger.Info("Stopping TCP Component")
-	return nil
-}
-
 func (t *TCP) HandleConnection(ctx context.Context) error {
 	for {
 		conn, err := t.Listener.Accept()
 		if err != nil {
-			t.logger.Error("failed to accept connection", err)
-			return err
+			select {
+			case <-ctx.Done():
+				t.logger.Info("context cancelled, stopping connection handler")
+				return ctx.Err()
+			default:
+				t.logger.Warn("failed to accept connection", "error", err)
+				return err
+			}
 		}
-		go t.processConnection(conn)
+		go t.processConnection(conn, ctx)
 	}
 }
 
-func (t *TCP) processConnection(conn net.Conn) {
+func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
+	t.wg.Add(1)
 
+	defer t.wg.Done()
+	defer conn.Close()
+
+	client := t.cm.HandleNewClient(conn)
+	t.logger.Info("client: " + client.ID + " is connected")
+
+	for {
+		select {
+		case <-ctx.Done():
+			t.logger.Info("client connection handler stopping", "client_id", client.ID)
+			return
+		default:
+		}
+	}
+}
+
+func (t *TCP) Start(b *core.Broker, ctx context.Context) error {
+	t.logger.Info("starting TCP component")
+
+	t.broker = b
+	t.cm = core.NewClientManager(b)
+
+	t.ctx, t.cancel = context.WithCancel(ctx)
+
+	go func() {
+		t.logger.Info("TCP server running", "port", 9091)
+		if err := t.HandleConnection(t.ctx); err != nil && err != context.Canceled {
+			t.logger.Warn("TCP Handler failed", "error", err)
+		}
+	}()
+
+	return nil
+}
+
+func (t *TCP) Stop(ctx context.Context) error {
+	t.logger.Info("stopping TCP Component")
+
+	if t.cancel != nil {
+		t.cancel()
+	}
+
+	if err := t.Listener.Close(); err != nil {
+		t.logger.Warn("error closing listener", "error", err)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		t.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		t.logger.Info("All connections closed gracefully")
+	case <-time.After(10 * time.Second):
+		t.logger.Warn("Timeout waiting for connections to close")
+		t.cm.Shutdown(ctx) // Force close
+	}
+
+	return nil
 }

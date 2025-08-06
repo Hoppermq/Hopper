@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/hoppermq/hopper/internal/handler"
 	"github.com/hoppermq/hopper/internal/mq/core"
+	handler "github.com/hoppermq/hopper/internal/mq/transport"
 )
 
 type HopperMQService struct {

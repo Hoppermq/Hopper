@@ -7,8 +7,8 @@ import (
 
 	"github.com/hoppermq/hopper/internal/application"
 	"github.com/hoppermq/hopper/internal/config"
-	"github.com/hoppermq/hopper/internal/handler"
 	"github.com/hoppermq/hopper/internal/mq"
+	handler "github.com/hoppermq/hopper/internal/mq/transport"
 	"github.com/zixyos/glog"
 )
 
