@@ -27,7 +27,7 @@ func NewClientManager(b *Broker) *ClientManager {
 
 func createClient(conn net.Conn) *Client {
 	return &Client{
-		ID:   "id",
+		ID:   GenerateIdentifier(),
 		Conn: conn,
 	}
 }

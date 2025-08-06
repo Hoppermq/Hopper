@@ -54,7 +54,7 @@ func New(opts ...Option) *HopperMQService {
 }
 
 func (h *HopperMQService) Name() string {
-	return ""
+	return "hopper-mq"
 }
 
 func (h *HopperMQService) StartService(name string, runner func() error) {
