@@ -6,53 +6,54 @@ import (
 	"net"
 
 	"github.com/hoppermq/hopper/internal/application"
-  "github.com/hoppermq/hopper/internal/handler"
-  "github.com/hoppermq/hopper/internal/config"
-	"github.com/hoppermq/hopper/internal/hopper"
+	"github.com/hoppermq/hopper/internal/config"
+	"github.com/hoppermq/hopper/internal/mq"
+	handler "github.com/hoppermq/hopper/internal/mq/transport"
 	"github.com/zixyos/glog"
 )
 
-const appName = "Hopper";
+const appName = "Hopper"
 
 func main() {
-  ctx := context.Background();
-  _, err := config.New(appName);
-  if err != nil {
-    panic(err)
-  }
+	ctx := context.Background()
+	_, err := config.New(appName)
+	if err != nil {
+		panic(err)
+	}
 
-  logger, err := glog.New(
-    glog.WithLevel(slog.LevelDebug),
-    glog.WithFormat(glog.TextFormatter),
-    glog.WithTimeStamp(),
-    glog.WithReportCaller(),
-    glog.WithStyle(
-      glog.WithErrorStyle(),
-    ),
-  );
-  if err != nil {
-    panic(err)
-  }
+	logger, err := glog.New(
+		glog.WithLevel(slog.LevelDebug),
+		glog.WithFormat(glog.TextFormatter),
+		glog.WithTimeStamp(),
+		glog.WithReportCaller(),
+		glog.WithStyle(
+			glog.WithErrorStyle(),
+		),
+	)
+	if err != nil {
+		panic(err)
+	}
 
-  lconf := &net.ListenConfig{}
+	lconf := &net.ListenConfig{}
 
-  tcpHandler, err := handler.NewTCP(
-    handler.WithContext(ctx),
-    handler.WithListener(*lconf),
-    handler.WithLogger(*&logger),
-  );
-  if err != nil {
-    panic(err)
-  }
+	tcpHandler, err := handler.NewTCP(
+		handler.WithContext(ctx),
+		handler.WithListener(*lconf),
+		handler.WithLogger(*&logger),
+	)
 
-  hopperService := hopper.New(
-    hopper.WithTCPHandler(tcpHandler), // could take an interface here
-    hopper.WithLogger(*logger),
-  );
+	if err != nil {
+		panic(err)
+	}
 
-  logger.Info("Hey Welcome to HOPPER");
-  application.New(
-    application.WithLogger(logger),
-    application.WithService(hopperService),
-  ).Start();
+	mq := mq.New(
+		mq.WithLogger(logger),
+		mq.WithTCP(tcpHandler),
+	)
+
+	logger.Info("Hey Welcome to HOPPER")
+	application.New(
+		application.WithLogger(logger),
+		application.WithService(mq),
+	).Start()
 }
