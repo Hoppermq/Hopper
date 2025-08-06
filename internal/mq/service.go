@@ -3,17 +3,21 @@ package mq
 import (
 	"context"
 	"log/slog"
+	"sync"
 
 	"github.com/hoppermq/hopper/internal/handler"
 	"github.com/hoppermq/hopper/internal/mq/core"
 )
 
 type HopperMQService struct {
-	logger *slog.Logger
-	// core logic
-	broker *core.Broker
-	// handler  called by the logic
+	broker     *core.Broker
 	tcpHandler *handler.TCP
+
+	logger *slog.Logger
+
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
 }
 
 type Option func(*HopperMQService)
@@ -53,13 +57,50 @@ func (h *HopperMQService) Name() string {
 	return ""
 }
 
-func (h *HopperMQService) Run(ctx context.Context) error {
-	h.broker.Start()
+func (h *HopperMQService) StartService(name string, runner func() error) {
+	h.logger.Info("Starting service", "service", name)
+	if err := runner(); err != nil && err != context.Canceled {
+		h.logger.Error("Service failed", "service", name, "error", err)
 
-	// goroutine for sub-services with inj of broker here
+		h.cancel()
+	}
+}
+
+func (h *HopperMQService) Run(ctx context.Context) error {
+	h.ctx, h.cancel = context.WithCancel(ctx) // should be init at the main prob
+	h.wg.Add(1)
+	go h.StartService("broker", func() error {
+		defer h.wg.Done()
+		return h.broker.Start(h.ctx)
+	})
+
+	h.wg.Add(1)
+	go h.StartService("tcpHandler", func() error {
+		defer h.wg.Done()
+		return h.tcpHandler.Start(h.broker, h.ctx)
+	})
+
+	<-h.ctx.Done()
+	h.logger.Info("Service stopped", "service", h.Name())
+
 	return nil
 }
 
 func (h *HopperMQService) Stop(ctx context.Context) error {
+	h.logger.Info("Stopping services")
+
+	if h.cancel != nil {
+		h.cancel()
+	}
+
+	if err := h.tcpHandler.Stop(ctx); err != nil {
+		h.logger.Error("Failed to stop TCP HAndler")
+	}
+
+	if err := h.broker.Stop(ctx); err != nil {
+		h.logger.Error("Failed to stop broker")
+	}
+
+	h.logger.Info("Services stopped")
 	return nil
 }

@@ -62,6 +62,16 @@ func NewTCP(opts ...Option) (*TCP, error) {
 	}, nil
 }
 
+func (t *TCP) Start(ctx context.Context) error {
+	t.logger.Info("Starting TCP Component")
+	return nil
+}
+
+func (t *TCP) Stop(ctx context.Context) error {
+	t.logger.Info("Stopping TCP Component")
+	return nil
+}
+
 func (t *TCP) HandleConnection(ctx context.Context) error {
 	for {
 		conn, err := t.Listener.Accept()
