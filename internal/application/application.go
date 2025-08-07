@@ -3,6 +3,7 @@ package application
 
 import (
 	"context"
+	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 	"os"
@@ -20,6 +21,7 @@ type Application struct {
 	logger *slog.Logger
 
 	service domain.Service
+	eb      domain.IEventBus
 	running chan bool
 	stop    chan os.Signal
 }
@@ -37,6 +39,12 @@ func WithLogger(logger *slog.Logger) Option {
 func WithService(service domain.Service) Option {
 	return func(a *Application) {
 		a.service = service
+	}
+}
+
+func WithEventBus(eb *events.EventBus) Option {
+	return func(a *Application) {
+		a.eb = eb
 	}
 }
 
@@ -61,6 +69,10 @@ func (a *Application) Start() {
 	a.logger.Info("Application STARTED")
 	ctx := context.Background()
 	signal.Notify(a.stop, syscall.SIGINT, syscall.SIGTERM)
+
+	if eventBusAware, ok := a.service.(domain.EventBusAware); ok {
+		eventBusAware.RegisterEventBus(a.eb)
+	}
 
 	go func() {
 		if err := a.service.Run(ctx); err != nil {

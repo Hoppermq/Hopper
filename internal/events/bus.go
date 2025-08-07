@@ -6,15 +6,10 @@ import (
 	"sync"
 )
 
-type Event struct {
-	domain.Event
-
-	Type    domain.EventType
-	Payload any
-}
-
 type EventBus struct {
-	mu        sync.RWMutex
+	mu sync.RWMutex
+	wg sync.WaitGroup
+
 	channels  map[domain.EventType][]domain.EventChannel
 	maxBuffer uint16
 }
@@ -49,9 +44,7 @@ func (eb *EventBus) Subscribe(eventType string) <-chan domain.Event {
 }
 
 func (eb *EventBus) Publish(ctx context.Context, event domain.Event) error {
-	eb.mu.RLock()
-	subs := eb.getSubscribers(event.Type())
-	eb.mu.RUnlock()
+	subs := eb.getSubscribers(event.GetType())
 
 	if len(subs) == 0 {
 		return nil

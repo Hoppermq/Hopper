@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/hoppermq/hopper/internal/events"
 	"log/slog"
 	"net"
 
@@ -36,6 +37,8 @@ func main() {
 
 	conf := &net.ListenConfig{}
 
+	eb := events.NewEventBus(1000) // should load from config
+
 	tcpHandler, err := handler.NewTCP(
 		handler.WithContext(ctx),
 		handler.WithListener(*conf),
@@ -54,6 +57,7 @@ func main() {
 	logger.Info("Hey Welcome to HOPPER")
 	application.New(
 		application.WithLogger(logger),
+		application.WithEventBus(eb),
 		application.WithService(hopperMQService),
 	).Start()
 }

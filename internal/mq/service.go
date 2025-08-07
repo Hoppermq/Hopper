@@ -6,11 +6,16 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/hoppermq/hopper/internal/events"
+	"github.com/hoppermq/hopper/pkg/domain"
+
 	"github.com/hoppermq/hopper/internal/mq/core"
 	handler "github.com/hoppermq/hopper/internal/mq/transport"
 )
 
 type HopperMQService struct {
+	eb *events.EventBus
+
 	broker     *core.Broker
 	tcpHandler *handler.TCP
 
@@ -58,7 +63,7 @@ func (h *HopperMQService) Name() string {
 	return "hopper-mq"
 }
 
-func (h *HopperMQService) StartService(name string, runner func() error) {
+func (h *HopperMQService) startService(name string, runner func() error) {
 	h.logger.Info("Starting service", "service", name)
 	if err := runner(); err != nil && !errors.Is(err, context.Canceled) {
 		h.logger.Error("Service failed", "service", name, "error", err)
@@ -70,9 +75,10 @@ func (h *HopperMQService) StartService(name string, runner func() error) {
 func (h *HopperMQService) Run(ctx context.Context) error {
 	h.ctx, h.cancel = context.WithCancel(ctx) // should be init at the main prob
 	h.wg.Add(1)
-	go h.StartService("broker", func() error {
+
+	go h.startService("broker", func() error {
 		defer h.wg.Done()
-		return h.broker.Start(h.ctx)
+		return h.broker.Start(h.ctx, h.tcpHandler)
 	})
 
 	<-h.ctx.Done()
@@ -98,4 +104,17 @@ func (h *HopperMQService) Stop(ctx context.Context) error {
 
 	h.logger.Info("Services stopped")
 	return nil
+}
+
+func (h *HopperMQService) RegisterEventBus(eventBus domain.IEventBus) {
+	if eb, ok := eventBus.(*events.EventBus); ok {
+		h.eb = eb
+
+		if h.broker != nil {
+			h.broker.RegisterEventBus(eb)
+		}
+		if h.tcpHandler != nil {
+			h.tcpHandler.RegisterEventBus(eb)
+		}
+	}
 }

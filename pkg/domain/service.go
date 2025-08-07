@@ -7,3 +7,7 @@ type Service interface {
 	Run(ctx context.Context) error
 	Stop(ctx context.Context) error
 }
+
+type EventBusAware interface {
+	RegisterEventBus(eventBus IEventBus) // You'll need EventBus interface in domain
+}

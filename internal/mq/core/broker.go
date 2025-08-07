@@ -3,6 +3,7 @@ package core
 
 import (
 	"context"
+	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 )
@@ -12,6 +13,7 @@ type Broker struct {
 	Logger *slog.Logger
 
 	services []domain.Service
+	eb       *events.EventBus
 }
 
 // Start initializes the Broker component, setting up necessary resources and preparing it to handle incoming messages and client connections.
@@ -33,10 +35,22 @@ func (b *Broker) Start(ctx context.Context, transports ...domain.Service) error 
 // Stop gracefully shuts down the Broker component, ensuring that all ongoing operations are completed and resources are released.
 func (b *Broker) Stop(ctx context.Context) error {
 	b.Logger.Info("Stopping Broker Component")
+	for _, service := range b.services {
+		if err := service.Stop(ctx); err != nil {
+			b.Logger.Error("Failed to stop service", "service", service.Name(), "error", err)
+		} else {
+			b.Logger.Info("Service stopped successfully", "service", service.Name())
+		}
+	}
 
 	return nil
 }
 
-func (b *Broker) HandleNewConnection(tt struct{}) error {
-	return nil
+func (b *Broker) Name() string {
+	return "hopper-broker"
+}
+
+func (b *Broker) RegisterEventBus(eb *events.EventBus) {
+	b.eb = eb
+	b.Logger.Info("EventBus registered with", "service", b.Name())
 }

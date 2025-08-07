@@ -4,18 +4,19 @@ package transport
 import (
 	"context"
 	"errors"
+	"github.com/hoppermq/hopper/internal/events"
 	"log/slog"
 	"net"
 	"sync"
 	"time"
-
-	"github.com/hoppermq/hopper/internal/mq/core"
 )
 
 // TCP is an TCP handler
 type TCP struct {
 	Listener net.Listener
 	logger   *slog.Logger
+
+	eb *events.EventBus
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -94,8 +95,8 @@ func (t *TCP) HandleConnection(ctx context.Context) error {
 
 func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
 	t.wg.Add(1)
-
 	defer t.wg.Done()
+
 	defer func(conn net.Conn) {
 		err := conn.Close()
 		if err != nil {
@@ -112,7 +113,7 @@ func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
 	}
 }
 
-func (t *TCP) Start(b *core.Broker, ctx context.Context) error {
+func (t *TCP) Run(ctx context.Context) error {
 	t.logger.Info("starting TCP component")
 
 	t.ctx, t.cancel = context.WithCancel(ctx)
@@ -152,4 +153,13 @@ func (t *TCP) Stop(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (t *TCP) Name() string {
+	return "tcp-handler"
+}
+
+func (t *TCP) RegisterEventBus(eb *events.EventBus) {
+	t.eb = eb
+	t.logger.Info("EventBus registered with TCP", "service", t.Name())
 }
