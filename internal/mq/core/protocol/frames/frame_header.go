@@ -19,6 +19,10 @@ func (h *HeaderFrame) Deserialize(data []byte) (domain.Serializable, error) {
 	panic("implement me")
 }
 
+func (h *HeaderFrame) GetFrameType() domain.FrameType {
+	return h.Type
+}
+
 func (h *HeaderFrame) Validate() bool {
 	//TODO implement me
 	panic("implement me")

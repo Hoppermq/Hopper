@@ -11,6 +11,7 @@ type DOFF uint8
 type HeaderFrame interface {
 	Serializable
 	Validate() bool
+	GetFrameType() FrameType
 }
 
 // Payload is the interface for all payloads in the HopperMQ protocol.

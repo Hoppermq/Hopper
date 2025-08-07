@@ -16,9 +16,40 @@ type Frame struct {
 	Payload        *domain.Payload
 }
 
+func validateFrame(header domain.HeaderFrame, payload domain.Payload) error {
+	if header == nil {
+		return domain.ErrInvalidHeader
+	}
+	frameType := header.GetFrameType()
+	switch frameType {
+	case domain.FrameTypeOpen:
+		if _, ok := payload.(domain.OpenFramePayload); !ok {
+			return domain.ErrInvalidPayload
+		}
+	case domain.FrameTypeMessage:
+		if _, ok := payload.(domain.MessageFramePayload); !ok {
+			return domain.ErrInvalidPayload
+		}
+	case domain.FrameTypeClose:
+		if _, ok := payload.(domain.OpenFramePayload); !ok {
+			return domain.ErrInvalidPayload
+		}
+	default:
+		return nil
+	}
+	return nil
+}
+
 // CreateFrame creates a new Frame with the given header, extended header, and payload.
-func CreateFrame(header *domain.HeaderFrame, extendedHeader ExtendedFrameHeader, payload *domain.Payload) *Frame {
-	// We should probably validate the header and payload here
+func CreateFrame(
+	header *domain.HeaderFrame,
+	extendedHeader ExtendedFrameHeader,
+	payload *domain.Payload,
+) *Frame {
+	if err := validateFrame(*header, *payload); err != nil {
+		return nil
+	}
+
 	return &Frame{
 		Header:         header,
 		ExtendedHeader: extendedHeader,
