@@ -3,7 +3,7 @@ module github.com/hoppermq/hopper
 go 1.23.4
 
 require (
-	github.com/knadh/koanf/parsers/toml v0.1.0
+	github.com/knadh/koanf/parsers/toml/v2 v2.2.0
 	github.com/knadh/koanf/parsers/toml/v2 v2.2.0
 	github.com/knadh/koanf/providers/env/v2 v2.0.0
 	github.com/knadh/koanf/providers/env/v2 v2.0.0
