@@ -3,6 +3,7 @@ package application
 
 import (
 	"context"
+	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -18,7 +19,7 @@ type Application struct {
 
 	logger *slog.Logger
 
-	service Service
+	service domain.Service
 	running chan bool
 	stop    chan os.Signal
 }
@@ -33,7 +34,7 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
-func WithService(service Service) Option {
+func WithService(service domain.Service) Option {
 	return func(a *Application) {
 		a.service = service
 	}
