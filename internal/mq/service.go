@@ -2,6 +2,7 @@ package mq
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"sync"
 
@@ -59,7 +60,7 @@ func (h *HopperMQService) Name() string {
 
 func (h *HopperMQService) StartService(name string, runner func() error) {
 	h.logger.Info("Starting service", "service", name)
-	if err := runner(); err != nil && err != context.Canceled {
+	if err := runner(); err != nil && !errors.Is(err, context.Canceled) {
 		h.logger.Error("Service failed", "service", name, "error", err)
 
 		h.cancel()
@@ -72,12 +73,6 @@ func (h *HopperMQService) Run(ctx context.Context) error {
 	go h.StartService("broker", func() error {
 		defer h.wg.Done()
 		return h.broker.Start(h.ctx)
-	})
-
-	h.wg.Add(1)
-	go h.StartService("tcpHandler", func() error {
-		defer h.wg.Done()
-		return h.tcpHandler.Start(h.broker, h.ctx)
 	})
 
 	<-h.ctx.Done()

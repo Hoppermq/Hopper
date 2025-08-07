@@ -3,6 +3,7 @@ package transport
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net"
 	"sync"
@@ -19,9 +20,6 @@ type TCP struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
-
-	broker *core.Broker
-	cm     *core.ClientManager
 }
 
 type config struct {
@@ -105,13 +103,9 @@ func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
 		}
 	}(conn)
 
-	client := t.cm.HandleNewClient(conn)
-	t.logger.Info("client: " + client.ID + " is connected")
-
 	for {
 		select {
 		case <-ctx.Done():
-			t.logger.Info("client connection handler stopping", "client_id", client.ID)
 			return
 		default:
 		}
@@ -121,14 +115,11 @@ func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
 func (t *TCP) Start(b *core.Broker, ctx context.Context) error {
 	t.logger.Info("starting TCP component")
 
-	t.broker = b
-	t.cm = core.NewClientManager(b)
-
 	t.ctx, t.cancel = context.WithCancel(ctx)
 
 	go func() {
 		t.logger.Info("TCP server running", "port", 9091)
-		if err := t.HandleConnection(t.ctx); err != nil && err != context.Canceled {
+		if err := t.HandleConnection(t.ctx); err != nil && !errors.Is(err, context.Canceled) {
 			t.logger.Warn("TCP Handler failed", "error", err)
 		}
 	}()
@@ -158,7 +149,6 @@ func (t *TCP) Stop(ctx context.Context) error {
 		t.logger.Info("All connections closed gracefully")
 	case <-time.After(10 * time.Second):
 		t.logger.Warn("Timeout waiting for connections to close")
-		t.cm.Shutdown(ctx) // Force close
 	}
 
 	return nil
