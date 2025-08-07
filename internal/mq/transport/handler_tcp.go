@@ -1,4 +1,5 @@
-package handler
+// Package transport provides all the transport handler for the Hopper message queue system.
+package transport
 
 import (
 	"context"
@@ -59,7 +60,10 @@ func WithContext(ctx context.Context) Option {
 func NewTCP(opts ...Option) (*TCP, error) {
 	handlerConfig := &config{}
 	for _, opt := range opts {
-		opt(handlerConfig)
+		err := opt(handlerConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	l, err := handlerConfig.lconf.Listen(handlerConfig.ctx, "tcp", ":9091")
@@ -94,7 +98,12 @@ func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
 	t.wg.Add(1)
 
 	defer t.wg.Done()
-	defer conn.Close()
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			t.logger.Warn("failed to close connection", "error", err)
+		}
+	}(conn)
 
 	client := t.cm.HandleNewClient(conn)
 	t.logger.Info("client: " + client.ID + " is connected")

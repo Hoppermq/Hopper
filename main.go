@@ -34,19 +34,19 @@ func main() {
 		panic(err)
 	}
 
-	lconf := &net.ListenConfig{}
+	conf := &net.ListenConfig{}
 
 	tcpHandler, err := handler.NewTCP(
 		handler.WithContext(ctx),
-		handler.WithListener(*lconf),
-		handler.WithLogger(*&logger),
+		handler.WithListener(*conf),
+		handler.WithLogger(logger),
 	)
 
 	if err != nil {
 		panic(err)
 	}
 
-	mq := mq.New(
+	hopperMQService := mq.New(
 		mq.WithLogger(logger),
 		mq.WithTCP(tcpHandler),
 	)
@@ -54,6 +54,6 @@ func main() {
 	logger.Info("Hey Welcome to HOPPER")
 	application.New(
 		application.WithLogger(logger),
-		application.WithService(mq),
+		application.WithService(hopperMQService),
 	).Start()
 }
