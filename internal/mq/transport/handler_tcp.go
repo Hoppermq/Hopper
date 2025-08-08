@@ -1,13 +1,14 @@
-package handler
+// Package transport provides all the transport handler for the Hopper message queue system.
+package transport
 
 import (
 	"context"
+	"errors"
+	"github.com/hoppermq/hopper/internal/events"
 	"log/slog"
 	"net"
 	"sync"
 	"time"
-
-	"github.com/hoppermq/hopper/internal/mq/core"
 )
 
 // TCP is an TCP handler
@@ -15,12 +16,11 @@ type TCP struct {
 	Listener net.Listener
 	logger   *slog.Logger
 
+	eb *events.EventBus
+
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
-
-	broker *core.Broker
-	cm     *core.ClientManager
 }
 
 type config struct {
@@ -59,7 +59,10 @@ func WithContext(ctx context.Context) Option {
 func NewTCP(opts ...Option) (*TCP, error) {
 	handlerConfig := &config{}
 	for _, opt := range opts {
-		opt(handlerConfig)
+		err := opt(handlerConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	l, err := handlerConfig.lconf.Listen(handlerConfig.ctx, "tcp", ":9091")
@@ -92,34 +95,52 @@ func (t *TCP) HandleConnection(ctx context.Context) error {
 
 func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
 	t.wg.Add(1)
-
 	defer t.wg.Done()
-	defer conn.Close()
 
-	client := t.cm.HandleNewClient(conn)
-	t.logger.Info("client: " + client.ID + " is connected")
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			t.logger.Warn("failed to close connection", "error", err)
+		}
+	}(conn)
+
+	// prob a goroutine to send events to the event bus
+	if t.eb == nil {
+		t.logger.Warn("EventBus not registered, skipping event publishing")
+		return
+	}
+
+	evt := &events.NewConnectionEvent{
+		Conn:      conn,
+		Transport: "tcp",
+		BaseEvent: events.BaseEvent{
+			EventType: "new_connection",
+		},
+	}
+
+	if err := t.eb.Publish(ctx, evt); err != nil {
+		t.logger.Warn("failed to publish new connection event", "error", err)
+		return
+	}
+	t.logger.Info("channel event published", "publisher", t.Name(), "event", evt.EventType, "transport", evt.Transport)
 
 	for {
 		select {
 		case <-ctx.Done():
-			t.logger.Info("client connection handler stopping", "client_id", client.ID)
 			return
 		default:
 		}
 	}
 }
 
-func (t *TCP) Start(b *core.Broker, ctx context.Context) error {
+func (t *TCP) Run(ctx context.Context) error {
 	t.logger.Info("starting TCP component")
-
-	t.broker = b
-	t.cm = core.NewClientManager(b)
 
 	t.ctx, t.cancel = context.WithCancel(ctx)
 
 	go func() {
 		t.logger.Info("TCP server running", "port", 9091)
-		if err := t.HandleConnection(t.ctx); err != nil && err != context.Canceled {
+		if err := t.HandleConnection(t.ctx); err != nil && !errors.Is(err, context.Canceled) {
 			t.logger.Warn("TCP Handler failed", "error", err)
 		}
 	}()
@@ -149,8 +170,16 @@ func (t *TCP) Stop(ctx context.Context) error {
 		t.logger.Info("All connections closed gracefully")
 	case <-time.After(10 * time.Second):
 		t.logger.Warn("Timeout waiting for connections to close")
-		t.cm.Shutdown(ctx) // Force close
 	}
 
 	return nil
+}
+
+func (t *TCP) Name() string {
+	return "tcp-handler"
+}
+
+func (t *TCP) RegisterEventBus(eb *events.EventBus) {
+	t.eb = eb
+	t.logger.Info("EventBus registered with TCP", "service", t.Name())
 }
