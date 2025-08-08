@@ -8,12 +8,27 @@ type ExtendedFrameHeader interface {
 	domain.Serializable
 }
 
+type Header struct {
+	Size      uint16
+	DOFF      domain.DOFF
+	FrameType domain.FrameType
+}
+
+type PayloadHeader struct {
+	Size uint16
+}
+
+type Payload struct {
+	Header domain.HeaderPayload
+	Data   []byte
+}
+
 // Frame represents a protocol frame in the HopperMQ system.
 type Frame struct {
 	domain.Serializable
-	Header         *domain.HeaderFrame
+	Header         domain.HeaderFrame
 	ExtendedHeader ExtendedFrameHeader
-	Payload        *domain.Payload
+	Payload        domain.Payload
 }
 
 func validateFrame(header domain.HeaderFrame, payload domain.Payload) error {
@@ -42,11 +57,11 @@ func validateFrame(header domain.HeaderFrame, payload domain.Payload) error {
 
 // CreateFrame creates a new Frame with the given header, extended header, and payload.
 func CreateFrame(
-	header *domain.HeaderFrame,
+	header domain.HeaderFrame,
 	extendedHeader ExtendedFrameHeader,
-	payload *domain.Payload,
+	payload domain.Payload,
 ) *Frame {
-	if err := validateFrame(*header, *payload); err != nil {
+	if err := validateFrame(header, payload); err != nil {
 		return nil
 	}
 
@@ -65,5 +80,24 @@ func (f *Frame) Serialize() ([]byte, error) {
 func (f *Frame) Deserialize(data []byte) (domain.Serializable, error) {
 	// Implement deserialization logic here
 	return nil, nil
+}
 
+func (p *Payload) Serialize() ([]byte, error) {
+	// Implement serialization logic for Payload
+	return nil, nil
+}
+
+func (p *Payload) Deserialize(data []byte) (domain.Serializable, error) {
+	// Implement deserialization logic for Payload
+	return nil, nil
+}
+
+func (ph *PayloadHeader) Serialize() ([]byte, error) {
+	// Implement serialization logic for PayloadHeader
+	return nil, nil
+}
+
+func (ph *PayloadHeader) Deserialize(data []byte) (domain.Serializable, error) {
+	// Implement deserialization logic for PayloadHeader
+	return nil, nil
 }

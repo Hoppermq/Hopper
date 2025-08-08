@@ -29,7 +29,7 @@ type MessageReceivedEvent struct {
 }
 
 type SendMessageEvent struct {
-	ClientID  string //should be the conn here
+	ClientID  string
 	Message   []byte
 	Transport string
 

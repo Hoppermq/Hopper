@@ -3,7 +3,6 @@ package application
 
 import (
 	"context"
-	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 	"os"
@@ -42,7 +41,7 @@ func WithService(service domain.Service) Option {
 	}
 }
 
-func WithEventBus(eb *events.EventBus) Option {
+func WithEventBus(eb domain.IEventBus) Option {
 	return func(a *Application) {
 		a.eb = eb
 	}

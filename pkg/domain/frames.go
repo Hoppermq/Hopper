@@ -14,6 +14,10 @@ type HeaderFrame interface {
 	GetFrameType() FrameType
 }
 
+type HeaderPayload interface {
+	Serializable
+}
+
 // Payload is the interface for all payloads in the HopperMQ protocol.
 type Payload interface {
 	Serializable
