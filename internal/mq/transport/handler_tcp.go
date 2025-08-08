@@ -104,6 +104,26 @@ func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
 		}
 	}(conn)
 
+	// prob a goroutine to send events to the event bus
+	if t.eb == nil {
+		t.logger.Warn("EventBus not registered, skipping event publishing")
+		return
+	}
+
+	evt := &events.NewConnectionEvent{
+		Conn:      conn,
+		Transport: "tcp",
+		BaseEvent: events.BaseEvent{
+			EventType: "new_connection",
+		},
+	}
+
+	if err := t.eb.Publish(ctx, evt); err != nil {
+		t.logger.Warn("failed to publish new connection event", "error", err)
+		return
+	}
+	t.logger.Info("channel event published", "publisher", t.Name(), "event", evt.EventType, "transport", evt.Transport)
+
 	for {
 		select {
 		case <-ctx.Done():

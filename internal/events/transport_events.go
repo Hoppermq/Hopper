@@ -6,8 +6,7 @@ import (
 )
 
 type BaseEvent struct {
-	EventType domain.EventType
-	ClientID  string
+	EventType string
 }
 
 func (evt *BaseEvent) GetType() domain.EventType {
@@ -15,9 +14,8 @@ func (evt *BaseEvent) GetType() domain.EventType {
 }
 
 type NewConnectionEvent struct {
-	ClientID   string
-	Connection net.Conn // hope i can do this bahahha
-	Transport  string
+	Conn      net.Conn // hope i can do this bahahha
+	Transport string
 
 	BaseEvent
 }
