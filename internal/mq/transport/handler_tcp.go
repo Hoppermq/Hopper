@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"github.com/hoppermq/hopper/internal/events"
+	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 	"net"
 	"sync"
@@ -16,7 +17,7 @@ type TCP struct {
 	Listener net.Listener
 	logger   *slog.Logger
 
-	eb *events.EventBus
+	eb domain.IEventBus
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -93,11 +94,11 @@ func (t *TCP) HandleConnection(ctx context.Context) error {
 	}
 }
 
-func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
+func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 	t.wg.Add(1)
 	defer t.wg.Done()
 
-	defer func(conn net.Conn) {
+	defer func(conn domain.Connection) {
 		err := conn.Close()
 		if err != nil {
 			t.logger.Warn("failed to close connection", "error", err)
@@ -112,9 +113,9 @@ func (t *TCP) processConnection(conn net.Conn, ctx context.Context) {
 
 	evt := &events.NewConnectionEvent{
 		Conn:      conn,
-		Transport: "tcp",
+		Transport: string(domain.TransportTypeTCP),
 		BaseEvent: events.BaseEvent{
-			EventType: "new_connection",
+			EventType: string(domain.EventTypeNewConnection),
 		},
 	}
 

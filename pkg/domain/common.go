@@ -5,3 +5,9 @@ type Serializable interface {
 	Serialize() ([]byte, error)
 	Deserialize(data []byte) (Serializable, error)
 }
+
+type Connection interface {
+	Read([]byte) (int, error)
+	Write([]byte) (int, error)
+	Close() error
+}
