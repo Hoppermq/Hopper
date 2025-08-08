@@ -2,7 +2,6 @@ package events
 
 import (
 	"github.com/hoppermq/hopper/pkg/domain"
-	"net"
 )
 
 type BaseEvent struct {
@@ -14,14 +13,17 @@ func (evt *BaseEvent) GetType() domain.EventType {
 }
 
 type NewConnectionEvent struct {
-	Conn      net.Conn // hope i can do this bahahha
+	Conn      domain.Connection
 	Transport string
 
 	BaseEvent
 }
 
+func (evt *NewConnectionEvent) GetTransport() domain.TransportType {
+	return domain.TransportType(evt.Transport)
+}
+
 type MessageReceivedEvent struct {
-	ClientID  string // i don't think transport is aware of this.
 	Message   []byte
 	Transport string
 
