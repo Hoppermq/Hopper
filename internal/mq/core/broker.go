@@ -14,7 +14,7 @@ type Broker struct {
 	Logger *slog.Logger
 
 	services []domain.Service
-	eb       *events.EventBus
+	eb       domain.IEventBus
 	cm       *ClientManager
 
 	wg     sync.WaitGroup
@@ -35,7 +35,7 @@ func (b *Broker) Start(ctx context.Context, transports ...domain.Service) error 
 
 	ctx, b.cancel = context.WithCancel(ctx)
 
-	connCh := b.eb.Subscribe("new_connection")
+	connCh := b.eb.Subscribe(string(domain.EventTypeNewConnection))
 
 	b.spawnHandler(ctx, func(ctx context.Context) {
 		b.handleNewConnections(ctx, connCh)
@@ -71,7 +71,7 @@ func (b *Broker) Name() string {
 	return "hopper-broker"
 }
 
-func (b *Broker) RegisterEventBus(eb *events.EventBus) {
+func (b *Broker) RegisterEventBus(eb domain.IEventBus) {
 	b.eb = eb
 	b.Logger.Info("EventBus registered with", "service", b.Name())
 }
@@ -79,7 +79,6 @@ func (b *Broker) RegisterEventBus(eb *events.EventBus) {
 func (b *Broker) onNewClientConnection(evt *events.NewConnectionEvent) {
 	client := b.cm.HandleNewClient(evt.Conn)
 	b.Logger.Info("New client connection handled", "clientID", client.ID)
-	// should publish frame here
 }
 
 func (b *Broker) handleNewConnections(ctx context.Context, ch <-chan domain.Event) {

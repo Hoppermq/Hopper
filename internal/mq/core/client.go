@@ -2,20 +2,20 @@ package core
 
 import (
 	"context"
-	"net"
+	"github.com/hoppermq/hopper/pkg/domain"
 	"sync"
 )
 
 // Client represents a single client connection to the broker.
 type Client struct {
 	ID   string
-	Conn net.Conn
+	Conn domain.Connection
 	Mut  sync.Mutex
 }
 
 // ClientManager is responsible for managing client connections to the broker.
 type ClientManager struct {
-	client (map[string]*Client)
+	client map[string]*Client
 	broker *Broker
 	mut    sync.RWMutex
 }
@@ -28,7 +28,7 @@ func NewClientManager(b *Broker) *ClientManager {
 	}
 }
 
-func createClient(conn net.Conn) *Client {
+func createClient(conn domain.Connection) *Client {
 	return &Client{
 		ID:   GenerateIdentifier(),
 		Conn: conn,
@@ -36,7 +36,7 @@ func createClient(conn net.Conn) *Client {
 }
 
 // HandleNewClient creates a new client connection and adds it to the ClientManager.
-func (cm *ClientManager) HandleNewClient(conn net.Conn) *Client {
+func (cm *ClientManager) HandleNewClient(conn domain.Connection) *Client {
 	return createClient(conn)
 }
 
