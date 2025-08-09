@@ -98,6 +98,7 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 
 	sendMsgEvt := &events.SendMessageEvent{
 		ClientID:  client.ID,
+		Conn:      client.Conn,
 		Message:   frame,
 		Transport: string(domain.TransportTypeTCP),
 		BaseEvent: events.BaseEvent{

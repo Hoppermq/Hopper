@@ -10,16 +10,6 @@ import (
 type ExtendedFrameHeader interface {
 }
 
-type Header struct {
-	Size      uint16
-	DOFF      domain.DOFF
-	FrameType domain.FrameType
-}
-
-type PayloadHeader struct {
-	Size uint16
-}
-
 // Payload represent the content of the frame in the HPMQ Protocol.
 type Payload struct {
 	Header domain.HeaderPayload
@@ -88,10 +78,6 @@ func calculatePayloadSize(payload domain.Payload) uint16 {
 	return 0
 }
 
-func (h *Header) SetSize(s uint16) {
-	h.Size = s
-}
-
 func (p *Payload) Sizer() uint16 {
 	headerSize := uint16(0)
 	if p.Header != nil {
@@ -106,8 +92,4 @@ func (p *Payload) Sizer() uint16 {
 
 	dataSize := uint16(len(p.Data))
 	return headerSize + dataSize
-}
-
-func (ph *PayloadHeader) Sizer() uint16 {
-	return 2
 }

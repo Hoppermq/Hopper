@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/hoppermq/hopper/internal/events"
 	"log/slog"
 	"net"
+
+	"github.com/hoppermq/hopper/internal/events"
 
 	"github.com/hoppermq/hopper/internal/application"
 	"github.com/hoppermq/hopper/internal/config"
 	"github.com/hoppermq/hopper/internal/mq"
-	handler "github.com/hoppermq/hopper/internal/mq/transport"
+	handler "github.com/hoppermq/hopper/internal/mq/transport/tcp"
 	"github.com/zixyos/glog"
 )
 

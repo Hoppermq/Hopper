@@ -5,7 +5,7 @@ import (
 )
 
 func CreateOpenFrame(doff domain.DOFF) (Frame, error) {
-	headerFrame := HeaderFrame{
+	headerFrame := Header{
 		Size: 0,
 		DOFF: doff,
 		Type: domain.FrameTypeOpen,

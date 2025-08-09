@@ -3,7 +3,17 @@ package common
 import (
 	"bytes"
 	"encoding/gob"
+
+	"github.com/hoppermq/hopper/pkg/domain"
 )
+
+type Constraint interface {
+	comparable
+	domain.Serializable
+}
+
+type Serializable[T Constraint] struct {
+}
 
 func Serialize[T any](d T) ([]byte, error) {
 	var buff bytes.Buffer

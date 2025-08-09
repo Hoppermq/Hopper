@@ -1,15 +1,16 @@
 // Package transport provides all the transport handler for the Hopper message queue system.
-package transport
+package tcp
 
 import (
 	"context"
 	"errors"
-	"github.com/hoppermq/hopper/internal/events"
-	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/hoppermq/hopper/internal/events"
+	"github.com/hoppermq/hopper/pkg/domain"
 )
 
 // TCP is an TCP handler
@@ -212,6 +213,7 @@ func (t *TCP) handleMessageSending(ctx context.Context, ch <-chan domain.Event) 
 			}
 			if c, ok := evt.(*events.SendMessageEvent); ok {
 				t.logger.Info("new message event received", "transport", c.Transport, "clientID", c.ClientID)
+				t.sendMessage(c.Message, c.Conn)
 			}
 		}
 	}
