@@ -3,11 +3,13 @@ package core
 
 import (
 	"context"
+	"log/slog"
+	"sync"
+
+	"github.com/hoppermq/hopper/internal/common"
 	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
 	"github.com/hoppermq/hopper/pkg/domain"
-	"log/slog"
-	"sync"
 )
 
 // Broker is the core component of the HopperMQ system, responsible for managing message queues and handling client connections.
@@ -81,9 +83,16 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 	client := b.cm.HandleNewClient(evt.Conn)
 	b.Logger.Info("New client connection handled", "clientID", client.ID)
 
-	frame, err := frames.CreateOpenFrame(domain.DOFF2).Serialize()
+	openFrame, err := frames.CreateOpenFrame(domain.DOFF2)
 	if err != nil {
-		b.Logger.Error("Failed to create Open frame", "error", err)
+		b.Logger.Warn("failed to create open frame", "error", err)
+	}
+	frame, err := common.Serialize(
+		openFrame,
+	)
+
+	if err != nil {
+		b.Logger.Error("failed to serialize open frame", "error", err)
 		return
 	}
 
