@@ -1,15 +1,16 @@
 // Package transport provides all the transport handler for the Hopper message queue system.
-package transport
+package tcp
 
 import (
 	"context"
 	"errors"
-	"github.com/hoppermq/hopper/internal/events"
-	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/hoppermq/hopper/internal/events"
+	"github.com/hoppermq/hopper/pkg/domain"
 )
 
 // TCP is an TCP handler
@@ -123,7 +124,16 @@ func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 		t.logger.Warn("failed to publish new connection event", "error", err)
 		return
 	}
-	t.logger.Info("channel event published", "publisher", t.Name(), "event", evt.EventType, "transport", evt.Transport)
+
+	t.logger.Info(
+		"channel event published",
+		"publisher",
+		t.Name(),
+		"event",
+		evt.EventType,
+		"transport",
+		evt.Transport,
+	)
 
 	for {
 		select {
@@ -138,6 +148,12 @@ func (t *TCP) Run(ctx context.Context) error {
 	t.logger.Info("starting TCP component")
 
 	t.ctx, t.cancel = context.WithCancel(ctx)
+
+	msgSenderCh := t.eb.Subscribe(string(domain.EventTypeSendMessage))
+
+	t.spawnHandler(ctx, func(ctx context.Context) {
+		t.handleMessageSending(ctx, msgSenderCh)
+	})
 
 	go func() {
 		t.logger.Info("TCP server running", "port", 9091)
@@ -180,7 +196,33 @@ func (t *TCP) Name() string {
 	return "tcp-handler"
 }
 
-func (t *TCP) RegisterEventBus(eb *events.EventBus) {
+func (t *TCP) RegisterEventBus(eb domain.IEventBus) {
 	t.eb = eb
 	t.logger.Info("EventBus registered with TCP", "service", t.Name())
+}
+
+// need the conn here
+func (t *TCP) handleMessageSending(ctx context.Context, ch <-chan domain.Event) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt, ok := <-ch:
+			if !ok {
+				return
+			}
+			if c, ok := evt.(*events.SendMessageEvent); ok {
+				t.logger.Info("new message event received", "transport", c.Transport, "clientID", c.ClientID)
+				t.sendMessage(c.Message, c.Conn)
+			}
+		}
+	}
+}
+
+func (t *TCP) spawnHandler(ctx context.Context, eventHandler func(ctx2 context.Context)) {
+	t.wg.Add(1)
+	go func() {
+		defer t.wg.Done()
+		eventHandler(ctx)
+	}()
 }

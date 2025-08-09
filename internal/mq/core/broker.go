@@ -3,10 +3,13 @@ package core
 
 import (
 	"context"
-	"github.com/hoppermq/hopper/internal/events"
-	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 	"sync"
+
+	"github.com/hoppermq/hopper/internal/common"
+	"github.com/hoppermq/hopper/internal/events"
+	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
+	"github.com/hoppermq/hopper/pkg/domain"
 )
 
 // Broker is the core component of the HopperMQ system, responsible for managing message queues and handling client connections.
@@ -76,9 +79,39 @@ func (b *Broker) RegisterEventBus(eb domain.IEventBus) {
 	b.Logger.Info("EventBus registered with", "service", b.Name())
 }
 
-func (b *Broker) onNewClientConnection(evt *events.NewConnectionEvent) {
+func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConnectionEvent) {
 	client := b.cm.HandleNewClient(evt.Conn)
 	b.Logger.Info("New client connection handled", "clientID", client.ID)
+
+	openFrame, err := frames.CreateOpenFrame(domain.DOFF2)
+	if err != nil {
+		b.Logger.Warn("failed to create open frame", "error", err)
+	}
+	frame, err := common.Serialize(
+		openFrame,
+	)
+
+	if err != nil {
+		b.Logger.Error("failed to serialize open frame", "error", err)
+		return
+	}
+
+	sendMsgEvt := &events.SendMessageEvent{
+		ClientID:  client.ID,
+		Conn:      client.Conn,
+		Message:   frame,
+		Transport: string(domain.TransportTypeTCP),
+		BaseEvent: events.BaseEvent{
+			EventType: string(domain.EventTypeSendMessage),
+		},
+	}
+
+	if err := b.eb.Publish(ctx, sendMsgEvt); err != nil {
+		b.Logger.Error("Failed to publish SendMessageEvent", "error", err)
+		return
+	}
+
+	b.Logger.Info("SendMessageEvent published", "clientID", client.ID, "transport", sendMsgEvt.Transport, "message", string(sendMsgEvt.Message))
 }
 
 func (b *Broker) handleNewConnections(ctx context.Context, ch <-chan domain.Event) {
@@ -92,7 +125,7 @@ func (b *Broker) handleNewConnections(ctx context.Context, ch <-chan domain.Even
 			}
 			if c, ok := evt.(*events.NewConnectionEvent); ok {
 				b.Logger.Info("New connection event received", "transport", c.Transport)
-				b.onNewClientConnection(c)
+				b.onNewClientConnection(ctx, c)
 			}
 		}
 	}

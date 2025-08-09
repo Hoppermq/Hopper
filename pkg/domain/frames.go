@@ -9,14 +9,18 @@ type DOFF uint8
 
 // HeaderFrame is the interface for all header frames in the HopperMQ protocol.
 type HeaderFrame interface {
-	Serializable
 	Validate() bool
 	GetFrameType() FrameType
+	SetSize(uint16)
+}
+
+type HeaderPayload interface {
+	Sizer() uint16
 }
 
 // Payload is the interface for all payloads in the HopperMQ protocol.
 type Payload interface {
-	Serializable
+	Sizer() uint16
 }
 
 // OpenFramePayload is the interface for open frame payloads in the HopperMQ protocol.

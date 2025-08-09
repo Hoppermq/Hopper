@@ -1,19 +1,26 @@
 // Package frames is the protocol frames business logic for HopperMQ.
 package frames
 
-import "github.com/hoppermq/hopper/pkg/domain"
+import (
+	"github.com/hoppermq/hopper/internal/common"
+	"github.com/hoppermq/hopper/pkg/domain"
+)
 
 // ExtendedFrameHeader is an interface for extended frame headers in the HopperMQ protocol.
 type ExtendedFrameHeader interface {
-	domain.Serializable
 }
 
-// Frame represents a protocol frame in the HopperMQ system.
+// Payload represent the content of the frame in the HPMQ Protocol.
+type Payload struct {
+	Header domain.HeaderPayload
+	Data   []byte
+}
+
+// Frame represents a protocol frame in the HPMQ Protocol.
 type Frame struct {
-	domain.Serializable
-	Header         *domain.HeaderFrame
+	Header         domain.HeaderFrame
 	ExtendedHeader ExtendedFrameHeader
-	Payload        *domain.Payload
+	Payload        domain.Payload
 }
 
 func validateFrame(header domain.HeaderFrame, payload domain.Payload) error {
@@ -42,28 +49,47 @@ func validateFrame(header domain.HeaderFrame, payload domain.Payload) error {
 
 // CreateFrame creates a new Frame with the given header, extended header, and payload.
 func CreateFrame(
-	header *domain.HeaderFrame,
+	header domain.HeaderFrame,
 	extendedHeader ExtendedFrameHeader,
-	payload *domain.Payload,
-) *Frame {
-	if err := validateFrame(*header, *payload); err != nil {
-		return nil
+	payload domain.Payload,
+) (Frame, error) {
+	if err := validateFrame(header, payload); err != nil {
+		return Frame{}, err
 	}
 
-	return &Frame{
+	header.SetSize(calculatePayloadSize(payload))
+
+	return Frame{
 		Header:         header,
 		ExtendedHeader: extendedHeader,
 		Payload:        payload,
+	}, nil
+}
+
+func calculatePayloadSize(payload domain.Payload) uint16 {
+	if sizer, ok := payload.(interface{ Sizer() uint16 }); ok {
+		return sizer.Sizer()
 	}
+
+	if data, err := common.Serialize(payload); err == nil {
+		return uint16(len(data))
+	}
+
+	return 0
 }
 
-func (f *Frame) Serialize() ([]byte, error) {
-	// Implement serialization logic here
-	return nil, nil
-}
+func (p *Payload) Sizer() uint16 {
+	headerSize := uint16(0)
+	if p.Header != nil {
+		if sizer, ok := p.Header.(interface{ Sizer() uint16 }); ok {
+			headerSize = sizer.Sizer()
+		} else {
+			if data, err := common.Serialize(p.Header); err != nil {
+				headerSize = uint16(len(data))
+			}
+		}
+	}
 
-func (f *Frame) Deserialize(data []byte) (domain.Serializable, error) {
-	// Implement deserialization logic here
-	return nil, nil
-
+	dataSize := uint16(len(p.Data))
+	return headerSize + dataSize
 }

@@ -29,13 +29,13 @@ type PostLoad interface {
 var configFs embed.FS
 
 type config struct {
-	target       interface{}
+	target       any
 	configLoader *koanf.Koanf
 	fs           *embed.FS
 	fname        string
 }
 
-func loader(target interface{}, options ...Option) error {
+func loader(target any, options ...Option) error {
 	conf := config{
 		target: target,
 	}
@@ -118,8 +118,8 @@ func New(_ string) (*Configuration, error) {
 		WithFs(configFs),
 		WithFName("config."+os.Getenv(envName)+ext),
 	); err != nil {
-    return nil, fmt.Errorf("failed to load configuration: %w", err)	
-  }
+		return nil, fmt.Errorf("failed to load configuration: %w", err)
+	}
 
 	return &conf, nil
 }

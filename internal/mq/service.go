@@ -6,15 +6,14 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/pkg/domain"
 
 	"github.com/hoppermq/hopper/internal/mq/core"
-	handler "github.com/hoppermq/hopper/internal/mq/transport"
+	handler "github.com/hoppermq/hopper/internal/mq/transport/tcp"
 )
 
 type HopperMQService struct {
-	eb *events.EventBus
+	eb domain.IEventBus
 
 	broker     *core.Broker
 	tcpHandler *handler.TCP
@@ -106,15 +105,13 @@ func (h *HopperMQService) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (h *HopperMQService) RegisterEventBus(eventBus domain.IEventBus) {
-	if eb, ok := eventBus.(*events.EventBus); ok {
-		h.eb = eb
+func (h *HopperMQService) RegisterEventBus(eb domain.IEventBus) {
+	h.eb = eb
 
-		if h.broker != nil {
-			h.broker.RegisterEventBus(eb)
-		}
-		if h.tcpHandler != nil {
-			h.tcpHandler.RegisterEventBus(eb)
-		}
+	if h.broker != nil {
+		h.broker.RegisterEventBus(eb)
+	}
+	if h.tcpHandler != nil {
+		h.tcpHandler.RegisterEventBus(eb)
 	}
 }

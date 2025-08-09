@@ -31,6 +31,8 @@ type MessageReceivedEvent struct {
 }
 
 type SendMessageEvent struct {
+	ClientID  string
+	Conn      domain.Connection
 	Message   []byte
 	Transport string
 
