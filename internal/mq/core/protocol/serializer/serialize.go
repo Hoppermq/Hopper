@@ -9,25 +9,62 @@ import (
 )
 
 type Serializer struct {
-	bufferPool domain.Pool[any] // since it's a global Serializer we will keep it as any atm.
+	bufferPool domain.Pool[*bytes.Buffer] // since it's a global Serializer we will keep it as any atm.
 	mu         sync.RWMutex
 }
 
-func (ps *Serializer) readUint16()        {}
-func (ps *Serializer) readUint32()        {}
-func (ps *Serializer) readFrameHeader()   {}
-func (ps *Serializer) readFramePayload()  {}
-func (ps *Serializer) readPayloadHeader() {}
-func (ps *Serializer) readPayload()       {}
+func (ps *Serializer) writeUint16(b *bytes.Buffer, u16 uint16) error {
+	return binary.Write(b, binary.BigEndian, u16)
+}
+
+func (ps *Serializer) writeUint32(b *bytes.Buffer, u32 uint32) error {
+	return binary.Write(b, binary.BigEndian, u32)
+}
+
+func (ps *Serializer) writeByteArray(b *bytes.Buffer, d []byte) error {
+	if err := binary.Write(b, binary.BigEndian, uint32(len(d))); err != nil {
+		return err
+	}
+	_, err := b.Write(d)
+	return err
+}
+
+func (ps *Serializer) writeFrameHeader(buff *bytes.Buffer, fh domain.HeaderFrame) error {
+	if err := ps.writeUint16(buff, fh.GetSize()); err != nil {
+		return err
+	}
+	if err := ps.writeUint16(buff, uint16(fh.GetDOFF())); err != nil {
+		return err
+	}
+	return ps.writeUint16(buff, uint16(fh.GetFrameType()))
+}
+
+func (ps *Serializer) writePayloadHeader(buff *bytes.Buffer, ph domain.HeaderPayload) error {
+	return ps.writeUint16(buff, ph.Sizer())
+}
+
+func (ps *Serializer) writePayload(buff *bytes.Buffer, fp domain.Payload) error {
+	if err := ps.writePayloadHeader(buff, fp.GetHeader()); err != nil {
+		return err
+	}
+	return ps.writeByteArray(buff, fp.GetData())
+}
 
 func (ps *Serializer) SerializeFrame(
 	frame domain.Frame,
 ) ([]byte, error) {
-	buff := ps.bufferPool.Get().(*bytes.Buffer)
+	buff := ps.bufferPool.Get()
 	defer ps.bufferPool.Put(buff)
 	buff.Reset()
 
-	binary.Write(buff, binary.BigEndian, frame)
+	if err := ps.writeFrameHeader(buff, frame.GetHeader()); err != nil {
+		return nil, err
+	}
+
+	if err := ps.writePayload(buff, frame.GetPayload()); err != nil {
+		return nil, err
+	}
+
 	res := make([]byte, buff.Len())
 	copy(res, buff.Bytes())
 
@@ -41,4 +78,10 @@ func (ps *Serializer) DeserializeFrame(d []byte) (domain.Frame, error) {
 	binary.Read(r, binary.BigEndian, &f)
 
 	return nil, nil
+}
+
+func NewSerializer(pool domain.Pool[*bytes.Buffer]) *Serializer {
+	return &Serializer{
+		bufferPool: pool,
+	}
 }

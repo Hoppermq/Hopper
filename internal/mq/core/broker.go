@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/hoppermq/hopper/internal/common"
 	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
+	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
@@ -16,9 +16,11 @@ import (
 type Broker struct {
 	Logger *slog.Logger
 
-	services []domain.Service
-	eb       domain.IEventBus
-	cm       *ClientManager
+	services   []domain.Service
+	Serializer *serializer.Serializer // should create a domain type here
+
+	eb domain.IEventBus
+	cm *ClientManager
 
 	wg     sync.WaitGroup
 	cancel context.CancelFunc
@@ -87,9 +89,8 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 	if err != nil {
 		b.Logger.Warn("failed to create open frame", "error", err)
 	}
-	frame, err := common.Serialize(
-		openFrame,
-	)
+
+	frame, err := b.Serializer.SerializeFrame(openFrame)
 
 	if err != nil {
 		b.Logger.Error("failed to serialize open frame", "error", err)

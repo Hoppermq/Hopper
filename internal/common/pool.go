@@ -9,7 +9,7 @@ type Pool[T any] struct {
 func NewPool[T any](f func() T) *Pool[T] {
 	return &Pool[T]{
 		Pool: sync.Pool{
-			New: func() any { return f },
+			New: func() any { return f() },
 		},
 	}
 }
