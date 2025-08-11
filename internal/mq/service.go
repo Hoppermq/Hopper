@@ -1,6 +1,7 @@
 package mq
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"log/slog"
@@ -8,7 +9,9 @@ import (
 
 	"github.com/hoppermq/hopper/pkg/domain"
 
+	"github.com/hoppermq/hopper/internal/common"
 	"github.com/hoppermq/hopper/internal/mq/core"
+	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
 	handler "github.com/hoppermq/hopper/internal/mq/transport/tcp"
 )
 
@@ -51,8 +54,15 @@ func New(opts ...Option) *HopperMQService {
 		opt(service)
 	}
 
+	serializer := serializer.NewSerializer(
+		common.NewPool(func() *bytes.Buffer {
+			return &bytes.Buffer{}
+		}),
+	)
+
 	service.broker = &core.Broker{
-		Logger: service.logger,
+		Logger:     service.logger,
+		Serializer: serializer,
 	}
 
 	return service

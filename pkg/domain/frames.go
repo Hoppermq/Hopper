@@ -7,10 +7,18 @@ type FrameType uint8
 // DOFF represents the Data Offset in the HopperMQ protocol.
 type DOFF uint8
 
+type Frame interface {
+	GetType() FrameType
+	GetHeader() HeaderFrame
+	GetPayload() Payload
+}
+
 // HeaderFrame is the interface for all header frames in the HopperMQ protocol.
 type HeaderFrame interface {
 	Validate() bool
 	GetFrameType() FrameType
+	GetSize() uint16
+	GetDOFF() DOFF
 	SetSize(uint16)
 }
 
@@ -20,6 +28,8 @@ type HeaderPayload interface {
 
 // Payload is the interface for all payloads in the HopperMQ protocol.
 type Payload interface {
+	GetHeader() HeaderPayload
+	GetData() []byte
 	Sizer() uint16
 }
 

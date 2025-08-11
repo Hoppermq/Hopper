@@ -8,6 +8,11 @@ type Serializable interface {
 	Deserialize(data []byte) (Serializable, error)
 }
 
+type Serializer interface {
+	SerializeFrame() ([]byte, error)
+	DeserializeFrame(data []byte) (Frame, error)
+}
+
 // Connection is an interface that use the same functions as net/Conn.
 type Connection interface {
 	Read([]byte) (int, error)

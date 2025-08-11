@@ -20,11 +20,19 @@ func (h *Header) GetFrameType() domain.FrameType {
 }
 
 func (h *Header) Validate() bool {
-	panic("implement me")
+	return h.Type != 0 && h.DOFF != 0
 }
 
 func (h *Header) SetSize(s uint16) {
 	h.Size = s
+}
+
+func (h *Header) GetSize() uint16 {
+	return h.Size
+}
+
+func (h *Header) GetDOFF() domain.DOFF {
+	return h.DOFF
 }
 
 func (ph *PayloadHeader) Sizer() uint16 {
