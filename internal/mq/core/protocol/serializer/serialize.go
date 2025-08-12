@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"sync"
 
+	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
@@ -22,10 +23,19 @@ func (ps *Serializer) writeUint32(b *bytes.Buffer, u32 uint32) error {
 }
 
 func (ps *Serializer) writeByteArray(b *bytes.Buffer, d []byte) error {
-	if err := binary.Write(b, binary.BigEndian, uint32(len(d))); err != nil {
+	if err := ps.writeUint32(b, uint32(len(d))); err != nil {
 		return err
 	}
 	_, err := b.Write(d)
+	return err
+}
+
+func (ps *Serializer) writeString(b *bytes.Buffer, str string) error {
+	if err := ps.writeUint32(b, uint32(len(str))); err != nil {
+		return err
+	}
+
+	_, err := b.Write([]byte(str))
 	return err
 }
 
@@ -62,6 +72,25 @@ func (ps *Serializer) SerializeFrame(
 	}
 
 	if err := ps.writePayload(buff, frame.GetPayload()); err != nil {
+		return nil, err
+	}
+
+	res := make([]byte, buff.Len())
+	copy(res, buff.Bytes())
+
+	return res, nil
+}
+
+func (ps *Serializer) SerializeOpenFramePayloadData(data *frames.OpenFramePayloadData) ([]byte, error) {
+	buff := ps.bufferPool.Get()
+	defer ps.bufferPool.Put(buff)
+	buff.Reset()
+
+	if err := ps.writeString(buff, data.AssignedChanID); err != nil {
+		return nil, err
+	}
+
+	if err := ps.writeString(buff, data.SourceID); err != nil {
 		return nil, err
 	}
 

@@ -85,9 +85,17 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 	client := b.cm.HandleNewClient(evt.Conn)
 	b.Logger.Info("New client connection handled", "clientID", client.ID)
 
-	openFrame, err := frames.CreateOpenFrame(domain.DOFF2)
+	openFramePayloadData := frames.CreateOpenFramePayloadData(client.ID, GenerateIdentifier())
+	data, err := b.Serializer.SerializeOpenFramePayloadData(openFramePayloadData)
+	if err != nil {
+		b.Logger.Warn("failed to serialize payload data")
+		return
+	}
+
+	openFrame, err := frames.CreateOpenFrame(domain.DOFF2, data)
 	if err != nil {
 		b.Logger.Warn("failed to create open frame", "error", err)
+		return
 	}
 
 	frame, err := b.Serializer.SerializeFrame(openFrame)
