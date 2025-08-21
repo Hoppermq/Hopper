@@ -108,8 +108,7 @@ func (c *config) load() error {
 
 // Configuration represent the application configuration.
 type Configuration struct {
-	Test string `koanf:"test"`
-	App  struct {
+	App struct {
 		Name        string `koanf:"name"`
 		Version     string `koanf:"version"`
 		ID          string `koanf:"id"`

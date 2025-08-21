@@ -18,7 +18,7 @@ const appName = "Hopper"
 
 func main() {
 	ctx := context.Background()
-	_, err := config.New(appName)
+	cfg, err := config.New(appName)
 	if err != nil {
 		panic(err)
 	}
@@ -57,6 +57,7 @@ func main() {
 
 	logger.Info("Hey Welcome to HOPPER")
 	application.New(
+		application.WithConfiguration(cfg),
 		application.WithLogger(logger),
 		application.WithEventBus(eb),
 		application.WithService(hopperMQService),

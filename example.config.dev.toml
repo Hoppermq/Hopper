@@ -316,7 +316,7 @@ jaeger_endpoint = ""
 enable_message_ordering = true
 ordering_timeout = "1s"
 
-# Message deduplication  
+# Message deduplication
 enable_deduplication = false
 dedup_window = "5m"
 
