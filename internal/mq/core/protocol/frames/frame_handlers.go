@@ -4,7 +4,7 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
-func CreateOpenFrame(doff domain.DOFF) (domain.Frame, error) {
+func CreateOpenFrame(doff domain.DOFF, serializedData []byte) (domain.Frame, error) {
 	headerFrame := Header{
 		Size: 0,
 		DOFF: doff,
@@ -15,18 +15,8 @@ func CreateOpenFrame(doff domain.DOFF) (domain.Frame, error) {
 		Header: &PayloadHeader{
 			Size: 0,
 		},
-		Data: []byte("OPEN FRAME"),
+		Data: serializedData,
 	}
 
 	return CreateFrame(&headerFrame, nil, &payload)
-}
-
-type OpenFrame struct {
-	Frame
-
-	SourceID string
-}
-
-func (op *OpenFrame) GetSourceID() string {
-	return op.SourceID
 }

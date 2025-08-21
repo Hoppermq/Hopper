@@ -64,7 +64,7 @@ func CreateFrame(
 	header domain.HeaderFrame,
 	extendedHeader ExtendedFrameHeader,
 	payload domain.Payload,
-) (Frame, error) {
+) (domain.Frame, error) {
 	/* if err := validateFrame(header, payload); err != nil {
 	return Frame{}, err
 	}*/
