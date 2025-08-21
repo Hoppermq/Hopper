@@ -1,0 +1,362 @@
+# Hopper Message Queue - Development Environment Configuration Example
+# This file shows all possible configuration options for the Hopper MQ system
+# Copy sections you need to your actual config.dev.toml file
+
+# Environment identification
+environment = "development"
+test = "dev"
+
+# =============================================================================
+# SERVER & NETWORK CONFIGURATION
+# =============================================================================
+
+[server]
+# Server binding
+host = "0.0.0.0"              # Bind to all interfaces
+port = 9091                   # Main TCP port for MQ connections
+# Additional ports for different protocols
+admin_port = 9092             # Admin/management interface
+metrics_port = 8080           # Metrics endpoint
+health_port = 8081            # Health check endpoint
+
+# Connection limits
+max_connections = 1000        # Max concurrent client connections
+max_connections_per_ip = 100  # Rate limiting per IP
+connection_timeout = "30s"    # Connection establishment timeout
+idle_timeout = "5m"           # Idle connection timeout
+
+# Read/Write timeouts
+read_timeout = "30s"
+write_timeout = "30s"
+read_header_timeout = "10s"
+
+# =============================================================================
+# TCP TRANSPORT CONFIGURATION
+# =============================================================================
+
+[transport.tcp]
+enabled = true
+# TCP socket options
+keep_alive = true
+keep_alive_period = "30s"
+no_delay = true               # Disable Nagle's algorithm for low latency
+linger_timeout = "5s"         # SO_LINGER timeout
+
+# Buffer sizes
+read_buffer_size = 8192       # 8KB read buffer
+write_buffer_size = 8192      # 8KB write buffer
+max_message_size = 1048576    # 1MB max single message
+
+# Connection pooling
+pool_size = 100               # Connection pool size
+pool_timeout = "10s"          # Pool acquisition timeout
+
+# =============================================================================
+# MESSAGE QUEUE BROKER CONFIGURATION
+# =============================================================================
+
+[broker]
+# Queue management
+max_queues = 10000            # Maximum number of queues
+max_queue_depth = 100000      # Max messages per queue
+default_queue_depth = 1000    # Default queue size
+queue_cleanup_interval = "5m" # Cleanup empty queues interval
+
+# Message handling
+max_message_size = 1048576    # 1MB max message size
+message_ttl = "24h"           # Default message time-to-live
+max_message_retries = 3       # Max delivery retries
+retry_delay = "30s"           # Base retry delay (exponential backoff)
+
+# Dead letter queue
+enable_dlq = true             # Enable dead letter queues
+dlq_suffix = ".dlq"           # Dead letter queue suffix
+dlq_max_messages = 10000      # Max messages in DLQ
+
+# Message routing
+enable_routing = true         # Enable message routing by patterns
+enable_fanout = true          # Enable fanout/broadcast messaging
+enable_topic_exchange = true  # Enable topic-based routing
+
+# =============================================================================
+# PERSISTENCE & STORAGE
+# =============================================================================
+
+[persistence]
+enabled = false               # Enable/disable persistence in dev
+storage_type = "disk"         # disk, memory, or hybrid
+data_dir = "./dev-data"       # Data directory
+sync_writes = false           # Sync writes to disk (slow but safe)
+
+# Disk storage settings
+max_disk_usage = "10GB"       # Max disk space usage
+cleanup_old_messages = true   # Auto cleanup old messages
+message_retention = "7d"      # How long to keep messages
+checkpoint_interval = "1m"    # Checkpoint interval for recovery
+
+# Memory settings
+max_memory_usage = "2GB"      # Max memory usage for queues
+memory_pressure_threshold = 0.8 # When to start evicting messages
+
+# =============================================================================
+# EVENT BUS CONFIGURATION
+# =============================================================================
+
+[eventbus]
+# Channel settings
+buffer_size = 2000            # Higher buffer for development
+max_subscribers = 1000        # Max subscribers per event type
+subscriber_timeout = "10s"    # Subscriber notification timeout
+
+# Event processing
+enable_async_processing = true # Process events asynchronously
+worker_pool_size = 50         # Event processing workers
+max_queued_events = 50000     # Max queued events before dropping
+
+# Event types to enable
+enable_connection_events = true
+enable_message_events = true
+enable_queue_events = true
+enable_broker_events = true
+enable_error_events = true
+
+# =============================================================================
+# CLIENT CONNECTION MANAGEMENT
+# =============================================================================
+
+[clients]
+# Authentication (future feature)
+enable_auth = false
+auth_timeout = "10s"
+max_auth_attempts = 3
+
+# Session management
+session_timeout = "30m"
+heartbeat_interval = "30s"
+client_timeout = "5m"
+
+# Rate limiting per client
+max_messages_per_second = 1000
+max_bytes_per_second = 10485760 # 10MB/s
+burst_limit = 100
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+
+[logging]
+level = "debug"               # trace, debug, info, warn, error
+format = "text"               # text or json
+timestamp = true
+report_caller = true
+colored_output = true         # Enable colored logs in dev
+
+# Log files (optional)
+# file = "logs/hopper-dev.log"
+# max_size = "100MB"
+# max_backups = 5
+# max_age = "30d"
+
+# Component-specific log levels
+[logging.components]
+broker = "debug"
+transport = "debug"
+eventbus = "info"
+persistence = "warn"
+clients = "debug"
+
+# =============================================================================
+# MONITORING & METRICS
+# =============================================================================
+
+[metrics]
+enabled = true
+port = 8080
+path = "/metrics"
+interval = "30s"             # Metrics collection interval
+
+# Prometheus integration
+prometheus_enabled = true
+prometheus_namespace = "hopper_mq"
+
+# Metrics to collect
+collect_message_stats = true
+collect_queue_stats = true
+collect_connection_stats = true
+collect_performance_stats = true
+collect_error_stats = true
+
+# =============================================================================
+# HEALTH CHECKS
+# =============================================================================
+
+[health]
+enabled = true
+port = 8081
+endpoint = "/health"
+interval = "30s"
+timeout = "5s"
+
+# Health check components
+check_broker = true
+check_persistence = true
+check_transport = true
+check_eventbus = true
+
+# Advanced health checks
+deep_health_check = true      # Check queue depths, message processing
+health_check_on_startup = true
+
+# =============================================================================
+# TIMEOUTS & RETRIES
+# =============================================================================
+
+[timeouts]
+# Application lifecycle
+startup = "30s"              # Max startup time
+shutdown = "30s"             # Graceful shutdown time
+force_shutdown = "10s"       # Force shutdown after graceful
+
+# Connection handling
+connection_close = "10s"     # Close connection timeout
+tcp_accept = "1s"           # TCP accept timeout
+handshake = "5s"            # Client handshake timeout
+
+# Broker operations
+broker_operation = "5s"      # General broker operation timeout
+queue_operation = "1s"       # Queue operations timeout
+message_delivery = "30s"     # Message delivery timeout
+
+# =============================================================================
+# SECURITY (Future Features)
+# =============================================================================
+
+[security]
+# TLS Configuration
+tls_enabled = false
+cert_file = ""
+key_file = ""
+ca_file = ""
+min_tls_version = "1.2"
+cipher_suites = []
+
+# Access control
+enable_acl = false           # Access Control Lists
+default_permissions = "rw"   # Default permissions for clients
+
+# IP filtering
+enable_ip_whitelist = false
+allowed_ips = ["127.0.0.1", "::1"]
+blocked_ips = []
+
+# =============================================================================
+# PERFORMANCE TUNING
+# =============================================================================
+
+[performance]
+# Go runtime settings
+max_procs = 0                # 0 = use all available CPUs
+gc_percent = 100             # Go GC target percentage
+
+# Buffer pooling
+enable_buffer_pooling = true
+buffer_pool_size = 1000
+
+# Message processing
+batch_size = 100             # Batch processing size
+flush_interval = "10ms"      # Batch flush interval
+enable_compression = false   # Message compression
+
+# Memory optimization
+enable_memory_profiling = true
+memory_limit = "4GB"
+enable_object_pooling = true
+
+# =============================================================================
+# CLUSTERING & HIGH AVAILABILITY (Future Features)
+# =============================================================================
+
+[cluster]
+enabled = false
+node_id = "hopper-dev-01"
+cluster_port = 7000
+seed_nodes = []
+
+# Replication
+replication_factor = 1
+enable_leader_election = false
+election_timeout = "5s"
+
+# =============================================================================
+# DEVELOPMENT & DEBUGGING
+# =============================================================================
+
+[development]
+# Debug options
+enable_debug_endpoints = true
+pprof_enabled = true         # Enable Go pprof endpoints
+pprof_port = 6060
+
+# Testing options
+simulate_failures = false    # Simulate random failures
+failure_rate = 0.001        # Failure simulation rate
+enable_chaos_testing = false
+
+# Tracing
+enable_tracing = false      # Distributed tracing
+trace_sampling_rate = 0.1   # Sample 10% of traces
+jaeger_endpoint = ""
+
+# =============================================================================
+# ADVANCED MESSAGE FEATURES
+# =============================================================================
+
+[messages]
+# Message ordering
+enable_message_ordering = true
+ordering_timeout = "1s"
+
+# Message deduplication
+enable_deduplication = false
+dedup_window = "5m"
+
+# Message transformation
+enable_message_transformation = false
+max_transformation_size = 2097152 # 2MB
+
+# Content validation
+enable_schema_validation = false
+schema_registry_url = ""
+
+# =============================================================================
+# WEBHOOKS & NOTIFICATIONS
+# =============================================================================
+
+[webhooks]
+enabled = false
+max_retries = 3
+retry_delay = "5s"
+timeout = "10s"
+
+# Webhook events
+on_queue_created = []
+on_message_failed = []
+on_connection_lost = []
+
+# =============================================================================
+# API & MANAGEMENT
+# =============================================================================
+
+[api]
+enabled = true
+port = 9092
+# Management endpoints
+enable_queue_management = true
+enable_message_management = true
+enable_client_management = true
+enable_stats_api = true
+
+# CORS settings
+cors_enabled = true
+cors_origins = ["*"]
+cors_methods = ["GET", "POST", "PUT", "DELETE"]

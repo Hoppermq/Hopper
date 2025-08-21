@@ -1,1 +1,27 @@
-test = "no"
+# Environment identification
+environment = "development"
+test = "dev"
+
+# =============================================================================
+# SERVER & NETWORK CONFIGURATION
+# =============================================================================
+
+[server]
+# Server binding
+host = "0.0.0.0"              # Bind to all interfaces
+port = 9091                   # Main TCP port for MQ connections
+# Additional ports for different protocols
+admin_port = 9092             # Admin/management interface
+metrics_port = 8080           # Metrics endpoint
+health_port = 8081            # Health check endpoint
+
+# Connection limits
+max_connections = 1000        # Max concurrent client connections
+max_connections_per_ip = 100  # Rate limiting per IP
+connection_timeout = "30s"    # Connection establishment timeout
+idle_timeout = "5m"           # Idle connection timeout
+
+# Read/Write timeouts
+read_timeout = "30s"
+write_timeout = "30s"
+read_header_timeout = "10s"
