@@ -1,0 +1,6 @@
+# Application Configuration
+[app]
+name = "Hopper"
+version = "v0.0.1"
+id = "hppr-app-01"
+description = "High-performance message queue system"

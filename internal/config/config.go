@@ -109,16 +109,47 @@ func (c *config) load() error {
 // Configuration represent the application configuration.
 type Configuration struct {
 	Test string `koanf:"test"`
+	App  struct {
+		Name        string `koanf:"name"`
+		Version     string `koanf:"version"`
+		ID          string `koanf:"id"`
+		Description string `koanf:"description"`
+	} `koanf:"app"`
 }
 
 // New create a new configuration from files and env.
 func New(_ string) (*Configuration, error) {
 	var conf Configuration
-	if err := loader(&conf,
-		WithFs(configFs),
-		WithFName("config."+os.Getenv(envName)+ext),
-	); err != nil {
-		return nil, fmt.Errorf("failed to load configuration: %w", err)
+	k := koanf.New(".")
+
+	// First, load the application configuration (app.config.toml)
+	if err := k.Load(fs.Provider(configFs, "app.config"+ext), toml.Parser()); err != nil {
+		return nil, fmt.Errorf("failed to load application configuration: %w", err)
+	}
+
+	// Then, load the environment-specific configuration (this will merge/override app config)
+	envConfigFile := "config." + os.Getenv(envName) + ext
+	if err := k.Load(fs.Provider(configFs, envConfigFile), toml.Parser()); err != nil {
+		return nil, fmt.Errorf("failed to load environment configuration %s: %w", envConfigFile, err)
+	}
+
+	// Load environment variables (highest priority)
+	if err := k.Load(env.Provider("", ".", func(s string) string {
+		return strings.ReplaceAll(strings.ToLower(s), "_", ".")
+	}), nil); err != nil {
+		return nil, fmt.Errorf("error loading env variables: %w", err)
+	}
+
+	// Unmarshal into the configuration struct
+	if err := k.Unmarshal("", &conf); err != nil {
+		return nil, fmt.Errorf("error while unmarshalling config: %w", err)
+	}
+
+	// Run post-load if the configuration implements it
+	if postLoad, ok := interface{}(&conf).(PostLoad); ok {
+		if err := postLoad.PostLoad(); err != nil {
+			return nil, fmt.Errorf("error while running post load: %w", err)
+		}
 	}
 
 	return &conf, nil
