@@ -3,21 +3,20 @@ package application
 
 import (
 	"context"
-	"github.com/hoppermq/hopper/pkg/domain"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/hoppermq/hopper/internal/config"
+	"github.com/hoppermq/hopper/pkg/domain"
 )
 
 // Application is the application structure wrapper.
 type Application struct {
-	name    string
-	version string
-	id      string
-
-	logger *slog.Logger
+	configuration config.Configuration
+	logger        *slog.Logger
 
 	service domain.Service
 	eb      domain.IEventBus
@@ -47,12 +46,15 @@ func WithEventBus(eb domain.IEventBus) Option {
 	}
 }
 
+func WithConfiguration(cfg *config.Configuration) Option {
+	return func(a *Application) {
+		a.configuration = *cfg
+	}
+}
+
 // New create a new application instance.
 func New(opts ...Option) *Application {
 	app := &Application{
-		name:    "Hopper",
-		version: "v/0.0.1",
-		id:      "hppr-id-01",
 		running: make(chan bool, 1),
 		stop:    make(chan os.Signal, 1),
 	}
@@ -65,7 +67,12 @@ func New(opts ...Option) *Application {
 }
 
 func (a *Application) Start() {
-	a.logger.Info("Application STARTED")
+	a.logger.Info(
+		"Application STARTED",
+		"name", a.configuration.App.Name,
+		"version", a.configuration.App.Version,
+		"id", a.configuration.App.ID,
+	)
 	ctx := context.Background()
 	signal.Notify(a.stop, syscall.SIGINT, syscall.SIGTERM)
 
