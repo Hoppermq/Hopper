@@ -88,8 +88,11 @@ func (c *config) load() error {
 		return fmt.Errorf("error loading file: %w", err)
 	}
 
-	if err := c.configLoader.Load(env.Provider("", ".", func(s string) string {
-		return strings.ReplaceAll(strings.ToLower(s), "_", ".")
+	if err := c.configLoader.Load(env.Provider(".", env.Opt{
+		TransformFunc: func(k, v string) (string, any) {
+			transformedKey := strings.ReplaceAll(strings.ToLower(k), "_", ".")
+			return transformedKey, v
+		},
 	}), nil); err != nil {
 		return fmt.Errorf("error loading env variables: %w", err)
 	}
@@ -133,8 +136,11 @@ func New(_ string) (*Configuration, error) {
 	}
 
 	// Load environment variables (highest priority)
-	if err := k.Load(env.Provider("", ".", func(s string) string {
-		return strings.ReplaceAll(strings.ToLower(s), "_", ".")
+	if err := k.Load(env.Provider(".", env.Opt{
+		TransformFunc: func(k, v string) (string, any) {
+			transformedKey := strings.ReplaceAll(strings.ToLower(k), "_", ".")
+			return transformedKey, v
+		},
 	}), nil); err != nil {
 		return nil, fmt.Errorf("error loading env variables: %w", err)
 	}

@@ -60,16 +60,13 @@ func New(opts ...Option) *HopperMQService {
 		}),
 	)
 
-	service.broker = &core.Broker{
-		Logger:     service.logger,
-		Serializer: serializer,
-	}
+	service.broker = core.NewBroker(service.logger, serializer)
 
 	return service
 }
 
 func (h *HopperMQService) Name() string {
-	return "hopper-mq"
+	return "hopper-mq" // should be loaded from config.
 }
 
 func (h *HopperMQService) startService(name string, runner func() error) {

@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/hoppermq/hopper/internal/events"
+	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
 	"github.com/hoppermq/hopper/pkg/domain"
@@ -19,11 +20,25 @@ type Broker struct {
 	services   []domain.Service
 	Serializer *serializer.Serializer // should create a domain type here
 
-	eb domain.IEventBus
-	cm *ClientManager
+	eb               domain.IEventBus
+	cm               *ClientManager
+	containerManager *container.ContainerManager
 
 	wg     sync.WaitGroup
 	cancel context.CancelFunc
+}
+
+// NewBroker creates a new Broker instance with all its core dependencies
+func NewBroker(logger *slog.Logger, serializer *serializer.Serializer) *Broker {
+	broker := &Broker{
+		Logger:     logger,
+		Serializer: serializer,
+	}
+
+	broker.cm = NewClientManager(broker)
+	broker.containerManager = container.NewContainerManager()
+
+	return broker
 }
 
 func (b *Broker) spawnHandler(ctx context.Context, eventHandler func(ctx2 context.Context)) {
@@ -83,9 +98,22 @@ func (b *Broker) RegisterEventBus(eb domain.IEventBus) {
 
 func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConnectionEvent) {
 	client := b.cm.HandleNewClient(evt.Conn)
-	b.Logger.Info("New client connection handled", "clientID", client.ID)
+	ctnr := b.containerManager.CreateNewContainer(
+		GenerateIdentifier,
+		domain.ID(client.ID),
+	)
+	b.Logger.Info(
+		"Container Created",
+		"container_id",
+		ctnr.(*container.Container).ID,
+		"current_state",
+		ctnr.(*container.Container).State,
+	)
+	openFramePayloadData := frames.CreateOpenFramePayloadData(
+		string(client.ID),
+		string(GenerateIdentifier()),
+	)
 
-	openFramePayloadData := frames.CreateOpenFramePayloadData(client.ID, GenerateIdentifier())
 	data, err := b.Serializer.SerializeOpenFramePayloadData(openFramePayloadData)
 	if err != nil {
 		b.Logger.Warn("failed to serialize payload data")
@@ -121,6 +149,8 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 	}
 
 	b.Logger.Info("SendMessageEvent published", "clientID", client.ID, "transport", sendMsgEvt.Transport, "message", string(sendMsgEvt.Message))
+	ctnr.SetState(domain.OPEN_SENT)
+	b.Logger.Info("Container have a new state", "container_state", ctnr.(*container.Container).State)
 }
 
 func (b *Broker) handleNewConnections(ctx context.Context, ch <-chan domain.Event) {

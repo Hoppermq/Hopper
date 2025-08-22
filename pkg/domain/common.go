@@ -2,6 +2,8 @@ package domain
 
 import "time"
 
+type ID string
+
 // Serializable is an interface for serializable objects in the HopperMQ protocol.
 type Serializable interface {
 	Serialize() ([]byte, error)
