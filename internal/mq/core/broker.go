@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/hoppermq/hopper/internal/events"
+	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
 	"github.com/hoppermq/hopper/pkg/domain"
@@ -19,11 +20,26 @@ type Broker struct {
 	services   []domain.Service
 	Serializer *serializer.Serializer // should create a domain type here
 
-	eb domain.IEventBus
-	cm *ClientManager
+	eb               domain.IEventBus
+	cm               *ClientManager
+	containerManager *container.ContainerManager
 
 	wg     sync.WaitGroup
 	cancel context.CancelFunc
+}
+
+// NewBroker creates a new Broker instance with all its core dependencies
+func NewBroker(logger *slog.Logger, serializer *serializer.Serializer) *Broker {
+	broker := &Broker{
+		Logger:     logger,
+		Serializer: serializer,
+	}
+
+	// Broker manages its own core dependencies
+	broker.cm = NewClientManager(broker)
+	broker.containerManager = container.NewContainerManager()
+
+	return broker
 }
 
 func (b *Broker) spawnHandler(ctx context.Context, eventHandler func(ctx2 context.Context)) {
