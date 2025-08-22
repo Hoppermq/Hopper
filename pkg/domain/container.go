@@ -23,6 +23,7 @@ type Container interface {
 	CreateChannel(topic string, idGenerator func() ID) Channel
 	RemoveChannel(topic string)
 	SetState(state ContainerState)
+	GetID() ID
 }
 
 type Channel interface {

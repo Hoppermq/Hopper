@@ -1,21 +1,23 @@
 package frames
 
+import "github.com/hoppermq/hopper/pkg/domain"
+
 type OpenFrame struct {
 	Frame
 }
 
 type OpenFramePayloadData struct {
-	SourceID       string
-	AssignedChanID string
+	SourceID            domain.ID
+	AssignedContainerID domain.ID
 }
 
-func (op *OpenFramePayloadData) GetSourceID() string {
+func (op *OpenFramePayloadData) GetSourceID() domain.ID {
 	return op.SourceID
 }
 
-func CreateOpenFramePayloadData(sourceID string, assignedChannel string) *OpenFramePayloadData {
+func CreateOpenFramePayloadData(sourceID domain.ID, assignedContainerID domain.ID) *OpenFramePayloadData {
 	return &OpenFramePayloadData{
-		SourceID:       sourceID,
-		AssignedChanID: assignedChannel,
+		SourceID:            sourceID,
+		AssignedContainerID: assignedContainerID,
 	}
 }

@@ -39,6 +39,15 @@ func (ps *Serializer) writeString(b *bytes.Buffer, str string) error {
 	return err
 }
 
+func (ps *Serializer) writeID(b *bytes.Buffer, ID domain.ID) error {
+	if err := ps.writeUint32(b, uint32(len(ID))); err != nil {
+		return err
+	}
+
+	_, err := b.Write([]byte(ID))
+	return err
+}
+
 func (ps *Serializer) writeFrameHeader(buff *bytes.Buffer, fh domain.HeaderFrame) error {
 	if err := ps.writeUint16(buff, fh.GetSize()); err != nil {
 		return err
@@ -86,11 +95,11 @@ func (ps *Serializer) SerializeOpenFramePayloadData(data *frames.OpenFramePayloa
 	defer ps.bufferPool.Put(buff)
 	buff.Reset()
 
-	if err := ps.writeString(buff, data.AssignedChanID); err != nil {
+	if err := ps.writeID(buff, data.AssignedContainerID); err != nil {
 		return nil, err
 	}
 
-	if err := ps.writeString(buff, data.SourceID); err != nil {
+	if err := ps.writeID(buff, data.SourceID); err != nil {
 		return nil, err
 	}
 
