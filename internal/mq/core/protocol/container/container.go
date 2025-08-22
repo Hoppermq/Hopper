@@ -73,3 +73,7 @@ func (ctnr *Container) findChannelByID(ID domain.ID) domain.Channel {
 func (ctnr *Container) SetState(state domain.ContainerState) {
 	ctnr.State = state
 }
+
+func (ctnr *Container) GetID() domain.ID {
+	return ctnr.ID
+}

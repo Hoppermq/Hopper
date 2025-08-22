@@ -105,13 +105,13 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 	b.Logger.Info(
 		"Container Created",
 		"container_id",
-		ctnr.(*container.Container).ID,
+		ctnr.GetID(),
 		"current_state",
 		ctnr.(*container.Container).State,
 	)
 	openFramePayloadData := frames.CreateOpenFramePayloadData(
-		string(client.ID),
-		string(GenerateIdentifier()),
+		client.ID,
+		ctnr.GetID(),
 	)
 
 	data, err := b.Serializer.SerializeOpenFramePayloadData(openFramePayloadData)
