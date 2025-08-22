@@ -9,21 +9,21 @@ import (
 
 // Client represents a single client connection to the broker.
 type Client struct {
-	ID   string
+	ID   domain.ID
 	Conn domain.Connection
 	Mut  sync.Mutex
 }
 
 // ClientManager is responsible for managing client connections to the broker.
 type ClientManager struct {
-	client map[string]*Client
+	client map[domain.ID]*Client
 	mut    sync.RWMutex
 }
 
 // NewClientManager creates a new ClientManager instance with the provided Broker.
 func NewClientManager(b *Broker) *ClientManager {
 	return &ClientManager{
-		client: make(map[string]*Client),
+		client: make(map[domain.ID]*Client),
 	}
 }
 
@@ -46,7 +46,7 @@ func (cm *ClientManager) HandleNewClient(conn domain.Connection) *Client {
 }
 
 // RemoveClient removes a client from the ClientManager by its ID.
-func (cm *ClientManager) RemoveClient(clientID string) {
+func (cm *ClientManager) RemoveClient(clientID domain.ID) {
 	cm.mut.Lock()
 	defer cm.mut.Unlock()
 

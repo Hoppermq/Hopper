@@ -35,7 +35,6 @@ func NewBroker(logger *slog.Logger, serializer *serializer.Serializer) *Broker {
 		Serializer: serializer,
 	}
 
-	// Broker manages its own core dependencies
 	broker.cm = NewClientManager(broker)
 	broker.containerManager = container.NewContainerManager()
 
@@ -99,9 +98,22 @@ func (b *Broker) RegisterEventBus(eb domain.IEventBus) {
 
 func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConnectionEvent) {
 	client := b.cm.HandleNewClient(evt.Conn)
-	b.Logger.Info("New client connection handled", "clientID", client.ID)
+	ctnr := b.containerManager.CreateNewContainer(
+		GenerateIdentifier,
+		domain.ID(client.ID),
+	)
+	b.Logger.Info(
+		"Container Created",
+		"container_id",
+		ctnr.(*container.Container).ID,
+		"current_state",
+		ctnr.(*container.Container).State,
+	)
+	openFramePayloadData := frames.CreateOpenFramePayloadData(
+		string(client.ID),
+		string(GenerateIdentifier()),
+	)
 
-	openFramePayloadData := frames.CreateOpenFramePayloadData(client.ID, GenerateIdentifier())
 	data, err := b.Serializer.SerializeOpenFramePayloadData(openFramePayloadData)
 	if err != nil {
 		b.Logger.Warn("failed to serialize payload data")
@@ -137,6 +149,8 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 	}
 
 	b.Logger.Info("SendMessageEvent published", "clientID", client.ID, "transport", sendMsgEvt.Transport, "message", string(sendMsgEvt.Message))
+	ctnr.SetState(domain.OPEN_SENT)
+	b.Logger.Info("Container have a new state", "container_state", ctnr.(*container.Container).State)
 }
 
 func (b *Broker) handleNewConnections(ctx context.Context, ch <-chan domain.Event) {

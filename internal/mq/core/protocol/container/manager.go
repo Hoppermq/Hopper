@@ -7,13 +7,24 @@ import (
 )
 
 type ContainerManager struct {
-	Container map[string]domain.Container
+	Container map[domain.ID]domain.Container
 
 	mut sync.RWMutex
 }
 
 func NewContainerManager() *ContainerManager {
 	return &ContainerManager{
-		Container: make(map[string]domain.Container),
+		Container: make(map[domain.ID]domain.Container),
 	}
+}
+
+func (ctnrManager *ContainerManager) CreateNewContainer(
+	IDGenerator func() domain.ID,
+	clientID domain.ID,
+) domain.Container {
+	println("HELLO ??")
+	container := NewContainer(IDGenerator(), clientID)
+	ctnrManager.Container[container.(*Container).ID] = container
+
+	return container
 }
