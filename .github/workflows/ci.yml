@@ -1,5 +1,5 @@
 name: Hopper actions
-run-name: ${{ github.actor }} is running
+run-name: ${{ github.actor }} is now running
 on:
   push:
     branches:
