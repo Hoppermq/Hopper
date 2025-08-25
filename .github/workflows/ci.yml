@@ -1,0 +1,17 @@
+name: Hopper actions
+run-name: ${{ github.actor }} is running
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "master"
+
+jobs:
+  steps:
+    - name: Testing
+      uses: hoppermq/hopper/golang/testing/action.yml
+
+    - name: Linting
+      usess: hoppermq/hopper/golang/linter/action.yml
