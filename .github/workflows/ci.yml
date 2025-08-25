@@ -10,10 +10,10 @@ on:
 
 jobs:
   ci:
-  runs-on: ubuntu-latest
-  steps:
-    - name: Testing
-      uses: hoppermq/hopper/golang/testing/action.yml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Testing
+        uses: hoppermq/hopper/golang/testing/action.yml
 
-    - name: Linting
-      uses: hoppermq/hopper/golang/linter/action.yml
+      - name: Linting
+        uses: hoppermq/hopper/golang/linter/action.yml
