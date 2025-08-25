@@ -55,13 +55,16 @@ const (
 
 const (
 	// FrameTypeOpen is the frame type for open frames.
-	FrameTypeOpen FrameType = 0x01
-
+	FrameTypeOpen    FrameType = 0x01
+	FameTypeOpenRcvd FrameType = 0x02
 	// FrameTypeClose is the frame type for close frames.
-	FrameTypeClose FrameType = 0x02
+	FrameTypeClose FrameType = 0x03
 
 	// FrameTypeMessage is the frame type for message frames.
-	FrameTypeMessage FrameType = 0x03
+	FrameTypeMessage     FrameType = 0x04
+	FrameTypeConnect     FrameType = 0x05
+	FrameTypeSubscribe   FrameType = 0x06
+	FrameTypeUnsubscribe FrameType = 0x07
 
 	//FrameTypeError is the frame type for error frames.
 	FrameTypeError FrameType = 0xF0
