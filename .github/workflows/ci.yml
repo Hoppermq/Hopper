@@ -16,4 +16,4 @@ jobs:
       uses: hoppermq/hopper/golang/testing/action.yml
 
     - name: Linting
-      usess: hoppermq/hopper/golang/linter/action.yml
+      uses: hoppermq/hopper/golang/linter/action.yml
