@@ -17,6 +17,11 @@ const (
 
 	// EventTypeSendMessage is the type for sending a msg to a transporter.
 	EventTypeSendMessage EventType = "send_message"
+
+	// EventTypeReceiveMessage is the type for receiving a msg from a transporter.
+	EventTypeReceiveMessage EventType = "receive_message"
+
+	EventTypeClientDisconnected EventType = "client_disconnected"
 )
 
 const (
@@ -27,6 +32,7 @@ const (
 // Event represent the event happening.
 type Event interface {
 	GetType() EventType
+	GetTransport() TransportType
 }
 
 // IEventBus represent the type of bus event.

@@ -2,8 +2,10 @@
 package tcp
 
 import (
+	"bufio"
 	"context"
 	"errors"
+	"io"
 	"log/slog"
 	"net"
 	"sync"
@@ -112,13 +114,7 @@ func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 		return
 	}
 
-	evt := &events.NewConnectionEvent{
-		Conn:      conn,
-		Transport: string(domain.TransportTypeTCP),
-		BaseEvent: events.BaseEvent{
-			EventType: string(domain.EventTypeNewConnection),
-		},
-	}
+	evt := events.NewEmitEvent(domain.EventTypeNewConnection, conn)
 
 	if err := t.eb.Publish(ctx, evt); err != nil {
 		t.logger.Warn("failed to publish new connection event", "error", err)
@@ -130,9 +126,9 @@ func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 		"publisher",
 		t.Name(),
 		"event",
-		evt.EventType,
+		evt.GetType(),
 		"transport",
-		evt.Transport,
+		evt.GetType(),
 	)
 
 	for {
@@ -140,8 +136,50 @@ func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
+			err := t.receiveMsg(conn, ctx)
+			if err != nil {
+				return
+			}
 		}
 	}
+}
+
+func (t *TCP) receiveMsg(conn domain.Connection, ctx context.Context) error {
+	reader := bufio.NewReader(conn)
+	conn.SetReadDeadline(time.Now().Add(50 * time.Second))
+	msg, err := reader.ReadBytes('\n')
+	if err != nil {
+		if err == io.EOF {
+			t.logger.Info("client disconnected from tcp")
+			evt := &events.ClientDisconnectedEvent{
+				Transport: domain.TransportTypeTCP,
+				Conn:      conn,
+				BaseEvent: events.BaseEvent{
+					EventType: domain.EventTypeClientDisconnected,
+				},
+			}
+
+			t.eb.Publish(ctx, evt)
+			return err
+		}
+	}
+
+	t.logger.Info("new message receive", "content", msg)
+	if t.eb == nil {
+		t.logger.Warn("EventBus not registered, skipping event publishing")
+		return err
+	}
+
+	evt := &events.MessageReceivedEvent{
+		Message:   msg,
+		Transport: domain.TransportTypeTCP,
+		BaseEvent: events.BaseEvent{
+			EventType: domain.EventTypeReceiveMessage,
+		},
+	}
+
+	t.eb.Publish(ctx, evt)
+	return nil
 }
 
 func (t *TCP) Run(ctx context.Context) error {

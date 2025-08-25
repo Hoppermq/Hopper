@@ -56,9 +56,17 @@ func (b *Broker) Start(ctx context.Context, transports ...domain.Service) error 
 	ctx, b.cancel = context.WithCancel(ctx)
 
 	connCh := b.eb.Subscribe(string(domain.EventTypeNewConnection))
+	msgCH := b.eb.Subscribe(string(domain.EventTypeReceiveMessage))
+	discCH := b.eb.Subscribe(string(domain.EventTypeClientDisconnected))
 
 	b.spawnHandler(ctx, func(ctx context.Context) {
 		b.handleNewConnections(ctx, connCh)
+	})
+	b.spawnHandler(ctx, func(ctx context.Context) {
+		b.handleNewMessageReceived(ctx, msgCH)
+	})
+	b.spawnHandler(ctx, func(ctx context.Context) {
+		b.handleClientDisconnect(ctx, discCH)
 	})
 
 	for _, transport := range transports {
@@ -137,9 +145,9 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 		ClientID:  client.ID,
 		Conn:      client.Conn,
 		Message:   frame,
-		Transport: string(domain.TransportTypeTCP),
+		Transport: domain.TransportTypeTCP,
 		BaseEvent: events.BaseEvent{
-			EventType: string(domain.EventTypeSendMessage),
+			EventType: domain.EventTypeSendMessage,
 		},
 	}
 
@@ -151,6 +159,10 @@ func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConne
 	b.Logger.Info("SendMessageEvent published", "clientID", client.ID, "transport", sendMsgEvt.Transport, "message", string(sendMsgEvt.Message))
 	ctnr.SetState(domain.OPEN_SENT)
 	b.Logger.Info("Container have a new state", "container_state", ctnr.(*container.Container).State)
+}
+
+func (b *Broker) onNewMessageReceived(ctx context.Context, evt *events.MessageReceivedEvent) {
+	b.Logger.Info("processing message", "data", evt.Message)
 }
 
 func (b *Broker) handleNewConnections(ctx context.Context, ch <-chan domain.Event) {
@@ -165,6 +177,48 @@ func (b *Broker) handleNewConnections(ctx context.Context, ch <-chan domain.Even
 			if c, ok := evt.(*events.NewConnectionEvent); ok {
 				b.Logger.Info("New connection event received", "transport", c.Transport)
 				b.onNewClientConnection(ctx, c)
+			}
+		}
+	}
+}
+
+func (b *Broker) handleNewMessageReceived(ctx context.Context, ch <-chan domain.Event) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt, ok := <-ch:
+			if !ok {
+				return
+			}
+
+			if c, ok := evt.(*events.MessageReceivedEvent); ok {
+				b.Logger.Info(
+					"new message event received",
+					"transport",
+					c.Transport,
+					"event",
+					c.EventType,
+				)
+
+			}
+		}
+	}
+}
+
+func (b *Broker) handleClientDisconnect(ctx context.Context, ch <-chan domain.Event) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt, ok := <-ch:
+			if !ok {
+				return
+			}
+
+			if c, ok := evt.(*events.ClientDisconnectedEvent); ok {
+				// retreive user by connection here
+				b.Logger.Info("client just diconnected", "client", c.Conn)
 			}
 		}
 	}
