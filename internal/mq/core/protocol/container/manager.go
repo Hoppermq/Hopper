@@ -22,7 +22,6 @@ func (ctnrManager *ContainerManager) CreateNewContainer(
 	IDGenerator func() domain.ID,
 	clientID domain.ID,
 ) domain.Container {
-	println("HELLO ??")
 	container := NewContainer(IDGenerator(), clientID)
 	ctnrManager.Container[container.GetID()] = container
 

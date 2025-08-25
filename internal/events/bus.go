@@ -2,8 +2,9 @@ package events
 
 import (
 	"context"
-	"github.com/hoppermq/hopper/pkg/domain"
 	"sync"
+
+	"github.com/hoppermq/hopper/pkg/domain"
 )
 
 type EventBus struct {

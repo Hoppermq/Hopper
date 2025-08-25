@@ -27,7 +27,7 @@ func NewChannel(generator func() domain.ID, topic string) domain.Channel {
 	return &Channel{
 		ID:         generator(),
 		Topic:      topic,
-		RoutingKey: "chanID-topic-version", // i guess version should be usefull here no?
+		RoutingKey: "chanID-topic-version", // i guess version should be useful here no?
 	}
 }
 

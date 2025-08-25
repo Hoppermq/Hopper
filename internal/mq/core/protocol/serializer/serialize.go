@@ -35,7 +35,7 @@ func (ps *Serializer) writeString(b *bytes.Buffer, str string) error {
 		return err
 	}
 
-	_, err := b.Write([]byte(str))
+	_, err := b.WriteString(str)
 	return err
 }
 
@@ -44,7 +44,7 @@ func (ps *Serializer) writeID(b *bytes.Buffer, ID domain.ID) error {
 		return err
 	}
 
-	_, err := b.Write([]byte(ID))
+	_, err := b.WriteString(string(ID))
 	return err
 }
 
@@ -113,7 +113,7 @@ func (ps *Serializer) DeserializeFrame(d []byte) (domain.Frame, error) {
 	r := bytes.NewReader(d)
 	var f domain.Frame
 
-	binary.Read(r, binary.BigEndian, &f)
+	_ = binary.Read(r, binary.BigEndian, &f)
 
 	return nil, nil
 }

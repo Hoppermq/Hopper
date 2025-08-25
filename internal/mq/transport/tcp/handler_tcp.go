@@ -13,7 +13,7 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
-// TCP is an TCP handler
+// TCP is an TCP handler.
 type TCP struct {
 	Listener net.Listener
 	logger   *slog.Logger
@@ -57,7 +57,7 @@ func WithContext(ctx context.Context) Option {
 	}
 }
 
-// NewTCP return the new tcp handler
+// NewTCP return the new tcp handler.
 func NewTCP(opts ...Option) (*TCP, error) {
 	handlerConfig := &config{}
 	for _, opt := range opts {
@@ -84,7 +84,7 @@ func (t *TCP) HandleConnection(ctx context.Context) error {
 		if err != nil {
 			select {
 			case <-ctx.Done():
-				t.logger.Info("context cancelled, stopping connection handler")
+				t.logger.Info("context canceled, stopping connection handler")
 				return ctx.Err()
 			default:
 				t.logger.Warn("failed to accept connection", "error", err)
