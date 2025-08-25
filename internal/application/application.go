@@ -96,7 +96,6 @@ func (a *Application) Start() {
 
 	if err := a.service.Stop(shutdownCtx); err != nil {
 		a.logger.Error("Failed to stop service: ", a.service.Name(), err)
-
 	}
 	a.logger.Info("Application STOPPED")
 }

@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/google/uuid"
+
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 

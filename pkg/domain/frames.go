@@ -63,6 +63,6 @@ const (
 	// FrameTypeMessage is the frame type for message frames.
 	FrameTypeMessage FrameType = 0x03
 
-	//FrameTypeError is the frame type for error frames.
+	// FrameTypeError is the frame type for error frames.
 	FrameTypeError FrameType = 0xF0
 )
