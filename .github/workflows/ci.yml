@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Testing
-        uses: hoppermq/hopper/golang/testing@master
+        uses: hoppermq/ci-kitchenette/golang/testing@master
 
       - name: Linting
-        uses: hoppermq/hopper/golang/linter@master
+        uses: hoppermq/ci-kitchenette/golang/linter@master
