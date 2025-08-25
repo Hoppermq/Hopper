@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Testing
-        uses: hoppermq/ci-kitchenette/golang/testing@master
+        uses: Hoppermq/ci-kitchenette/golang/testing@master
 
       - name: Linting
-        uses: hoppermq/ci-kitchenette/golang/linter@master
+        uses: Hoppermq/ci-kitchenette/golang/linter@master
