@@ -66,6 +66,6 @@ const (
 	FrameTypeSubscribe   FrameType = 0x06
 	FrameTypeUnsubscribe FrameType = 0x07
 
-	//FrameTypeError is the frame type for error frames.
+	// FrameTypeError is the frame type for error frames.
 	FrameTypeError FrameType = 0xF0
 )

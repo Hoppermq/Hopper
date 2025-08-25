@@ -7,11 +7,12 @@ import (
 
 	"github.com/hoppermq/hopper/internal/events"
 
+	"github.com/zixyos/glog"
+
 	"github.com/hoppermq/hopper/internal/application"
 	"github.com/hoppermq/hopper/internal/config"
 	"github.com/hoppermq/hopper/internal/mq"
 	handler "github.com/hoppermq/hopper/internal/mq/transport/tcp"
-	"github.com/zixyos/glog"
 )
 
 const appName = "Hopper"

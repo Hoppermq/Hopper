@@ -1,0 +1,22 @@
+name: Hopper actions
+run-name: ${{ github.actor }} is now running
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "master"
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Testing
+        uses: Hoppermq/ci-kitchenette/golang/testing@master
+
+      - name: Linting
+        uses: Hoppermq/ci-kitchenette/golang/linter@master
