@@ -60,6 +60,27 @@ func (cm *ClientManager) RemoveClient(clientID domain.ID) {
 	}
 }
 
+// GetClientByConnection finds a client by their connection.
+func (cm *ClientManager) GetClientByConnection(conn domain.Connection) *Client {
+	cm.mut.RLock()
+	defer cm.mut.RUnlock()
+
+	for _, client := range cm.client {
+		if client.Conn == conn {
+			return client
+		}
+	}
+	return nil
+}
+
+// GetClient finds a client by their ID.
+func (cm *ClientManager) GetClient(clientID domain.ID) *Client {
+	cm.mut.RLock()
+	defer cm.mut.RUnlock()
+
+	return cm.client[clientID]
+}
+
 // Shutdown gracefully disconnects all clients managed by the ClientManager.
 func (cm *ClientManager) Shutdown(ctx context.Context) error {
 	cm.mut.Lock()

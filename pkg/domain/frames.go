@@ -29,19 +29,60 @@ type HeaderPayload interface {
 // Payload is the interface for all payloads in the HopperMQ protocol.
 type Payload interface {
 	GetHeader() HeaderPayload
-	GetData() []byte
 	Sizer() uint16
 }
 
 // OpenFramePayload is the interface for open frame payloads in the HopperMQ protocol.
 type OpenFramePayload interface {
 	Payload
-	GetSourceID() string
+	GetSourceID() ID
+	GetAssignedContainerID() ID
 }
 
 // MessageFramePayload is the interface for message frame payloads in the HopperMQ protocol.
 type MessageFramePayload interface {
 	Payload
+	GetTopic() string
+	GetMessageID() ID
+	GetContent() []byte
+	GetHeaders() map[string]string
+}
+
+// ConnectFramePayload is the interface for connect frame payloads in the HopperMQ protocol.
+type ConnectFramePayload interface {
+	Payload
+	GetClientID() ID
+	GetClientVersion() string
+	GetKeepAlive() uint16
+}
+
+// SubscribeFramePayload is the interface for subscribe frame payloads in the HopperMQ protocol.
+type SubscribeFramePayload interface {
+	Payload
+	GetTopic() string
+	GetQoS() uint8
+	GetRoutingKey() string
+}
+
+// UnsubscribeFramePayload is the interface for unsubscribe frame payloads in the HopperMQ protocol.
+type UnsubscribeFramePayload interface {
+	Payload
+	GetTopic() string
+}
+
+// CloseFramePayload is the interface for close frame payloads in the HopperMQ protocol.
+type CloseFramePayload interface {
+	Payload
+	GetReason() string
+	GetCode() uint16
+}
+
+// ErrorFramePayload is the interface for error frame payloads in the HopperMQ protocol.
+type ErrorFramePayload interface {
+	Payload
+	GetErrorCode() uint16
+	GetErrorMessage() string
+	GetDetails() map[string]string
 }
 
 const (
@@ -55,15 +96,24 @@ const (
 
 const (
 	// FrameTypeOpen is the frame type for open frames.
-	FrameTypeOpen    FrameType = 0x01
-	FameTypeOpenRcvd FrameType = 0x02
+	FrameTypeOpen FrameType = 0x01
+
+	// FrameTypeOpenRcvd is the frame type for open received frames.
+	FrameTypeOpenRcvd FrameType = 0x02
+
 	// FrameTypeClose is the frame type for close frames.
 	FrameTypeClose FrameType = 0x03
 
 	// FrameTypeMessage is the frame type for message frames.
-	FrameTypeMessage     FrameType = 0x04
-	FrameTypeConnect     FrameType = 0x05
-	FrameTypeSubscribe   FrameType = 0x06
+	FrameTypeMessage FrameType = 0x04
+
+	// FrameTypeConnect is the frame type for connect frames.
+	FrameTypeConnect FrameType = 0x05
+
+	// FrameTypeSubscribe is the frame type for subscribe frames.
+	FrameTypeSubscribe FrameType = 0x06
+
+	// FrameTypeUnsubscribe is the frame type for unsubscribe frames.
 	FrameTypeUnsubscribe FrameType = 0x07
 
 	// FrameTypeError is the frame type for error frames.

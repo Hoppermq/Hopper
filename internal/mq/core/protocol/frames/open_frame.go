@@ -1,22 +1,44 @@
 package frames
 
-import "github.com/hoppermq/hopper/pkg/domain"
+import (
+	"github.com/hoppermq/hopper/pkg/domain"
+)
 
-type OpenFrame struct {
-	Frame
-}
-
-type OpenFramePayloadData struct {
+// OpenFramePayload represents the payload for open frames in the HopperMQ protocol.
+type OpenFramePayload struct {
+	BasePayload
 	SourceID            domain.ID
 	AssignedContainerID domain.ID
 }
 
-func (op *OpenFramePayloadData) GetSourceID() domain.ID {
-	return op.SourceID
+// GetSourceID returns the source ID from the open frame payload.
+func (ofp *OpenFramePayload) GetSourceID() domain.ID {
+	return ofp.SourceID
 }
 
-func CreateOpenFramePayloadData(sourceID domain.ID, assignedContainerID domain.ID) *OpenFramePayloadData {
-	return &OpenFramePayloadData{
+// GetAssignedContainerID returns the assigned container ID from the open frame payload.
+func (ofp *OpenFramePayload) GetAssignedContainerID() domain.ID {
+	return ofp.AssignedContainerID
+}
+
+// Sizer calculates the total size of the open frame payload.
+func (ofp *OpenFramePayload) Sizer() uint16 {
+	headerSize := uint16(0)
+	if ofp.Header != nil {
+		headerSize = ofp.Header.Sizer()
+	}
+
+	// Calculate size of IDs (assuming they serialize to known sizes)
+	dataSize := uint16(len(ofp.SourceID) + len(ofp.AssignedContainerID))
+	return headerSize + dataSize
+}
+
+// CreateOpenFramePayload creates a new OpenFramePayload instance.
+func CreateOpenFramePayload(header domain.HeaderPayload, sourceID domain.ID, assignedContainerID domain.ID) *OpenFramePayload {
+	return &OpenFramePayload{
+		BasePayload: BasePayload{
+			Header: header,
+		},
 		SourceID:            sourceID,
 		AssignedContainerID: assignedContainerID,
 	}
