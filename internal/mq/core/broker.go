@@ -6,9 +6,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
-	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
@@ -49,16 +47,26 @@ func (b *Broker) spawnHandler(ctx context.Context, eventHandler func(ctx2 contex
 	}()
 }
 
-// Start initializes the Broker component, setting up necessary resources and preparing it to handle incoming messages and client connections.
+// Start initializes the Broker component, setting up necessary resources and preparing it to handle incoming frames and client connections.
 func (b *Broker) Start(ctx context.Context, transports ...domain.Service) error {
 	b.Logger.Info("Starting Broker Component")
 
 	ctx, b.cancel = context.WithCancel(ctx)
 
-	connCh := b.eb.Subscribe(string(domain.EventTypeNewConnection))
+	rcvdFrameCh := b.eb.Subscribe(string(domain.EventTypeReceiveMessage))
+	newConnCh := b.eb.Subscribe(string(domain.EventTypeNewConnection))
+	closedConnCh := b.eb.Subscribe(string(domain.EventTypeConnectionClosed))
 
 	b.spawnHandler(ctx, func(ctx context.Context) {
-		b.handleNewConnections(ctx, connCh)
+		b.onReceivingMessage(ctx, rcvdFrameCh)
+	})
+
+	b.spawnHandler(ctx, func(ctx context.Context) {
+		b.onNewClientConnection(ctx, newConnCh)
+	})
+
+	b.spawnHandler(ctx, func(ctx context.Context) {
+		b.onClientDisconnect(ctx, closedConnCh)
 	})
 
 	for _, transport := range transports {
@@ -76,6 +84,12 @@ func (b *Broker) Start(ctx context.Context, transports ...domain.Service) error 
 // Stop gracefully shuts down the Broker component, ensuring that all ongoing operations are completed and resources are released.
 func (b *Broker) Stop(ctx context.Context) error {
 	b.Logger.Info("Stopping Broker Component")
+
+	// Cancel context to stop all handlers
+	if b.cancel != nil {
+		b.cancel()
+	}
+
 	for _, service := range b.services {
 		if err := service.Stop(ctx); err != nil {
 			b.Logger.Error("Failed to stop service", "service", service.Name(), "error", err)
@@ -94,78 +108,4 @@ func (b *Broker) Name() string {
 func (b *Broker) RegisterEventBus(eb domain.IEventBus) {
 	b.eb = eb
 	b.Logger.Info("EventBus registered with", "service", b.Name())
-}
-
-func (b *Broker) onNewClientConnection(ctx context.Context, evt *events.NewConnectionEvent) {
-	client := b.cm.HandleNewClient(evt.Conn)
-	ctnr := b.containerManager.CreateNewContainer(
-		GenerateIdentifier,
-		domain.ID(client.ID),
-	)
-	b.Logger.Info(
-		"Container Created",
-		"container_id",
-		ctnr.GetID(),
-		"current_state",
-		ctnr.(*container.Container).State,
-	)
-	openFramePayloadData := frames.CreateOpenFramePayloadData(
-		client.ID,
-		ctnr.GetID(),
-	)
-
-	data, err := b.Serializer.SerializeOpenFramePayloadData(openFramePayloadData)
-	if err != nil {
-		b.Logger.Warn("failed to serialize payload data")
-		return
-	}
-
-	openFrame, err := frames.CreateOpenFrame(domain.DOFF2, data)
-	if err != nil {
-		b.Logger.Warn("failed to create open frame", "error", err)
-		return
-	}
-
-	frame, err := b.Serializer.SerializeFrame(openFrame)
-
-	if err != nil {
-		b.Logger.Error("failed to serialize open frame", "error", err)
-		return
-	}
-
-	sendMsgEvt := &events.SendMessageEvent{
-		ClientID:  client.ID,
-		Conn:      client.Conn,
-		Message:   frame,
-		Transport: string(domain.TransportTypeTCP),
-		BaseEvent: events.BaseEvent{
-			EventType: string(domain.EventTypeSendMessage),
-		},
-	}
-
-	if err := b.eb.Publish(ctx, sendMsgEvt); err != nil {
-		b.Logger.Error("Failed to publish SendMessageEvent", "error", err)
-		return
-	}
-
-	b.Logger.Info("SendMessageEvent published", "clientID", client.ID, "transport", sendMsgEvt.Transport, "message", string(sendMsgEvt.Message))
-	ctnr.SetState(domain.OPEN_SENT)
-	b.Logger.Info("Container have a new state", "container_state", ctnr.(*container.Container).State)
-}
-
-func (b *Broker) handleNewConnections(ctx context.Context, ch <-chan domain.Event) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case evt, ok := <-ch:
-			if !ok {
-				return
-			}
-			if c, ok := evt.(*events.NewConnectionEvent); ok {
-				b.Logger.Info("New connection event received", "transport", c.Transport)
-				b.onNewClientConnection(ctx, c)
-			}
-		}
-	}
 }
