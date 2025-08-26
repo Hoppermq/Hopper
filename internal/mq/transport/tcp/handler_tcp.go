@@ -108,13 +108,19 @@ func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 		}
 	}(conn)
 
-	// prob a goroutine to send events to the event bus
 	if t.eb == nil {
 		t.logger.Warn("EventBus not registered, skipping event publishing")
 		return
 	}
 
-	evt := events.NewEmitEvent(domain.EventTypeNewConnection, conn)
+	// look back for emit event please
+	evt := &events.NewConnectionEvent{
+		Conn:      conn,
+		Transport: domain.TransportTypeTCP,
+		BaseEvent: events.BaseEvent{
+			EventType: domain.EventTypeNewConnection,
+		},
+	}
 
 	if err := t.eb.Publish(ctx, evt); err != nil {
 		t.logger.Warn("failed to publish new connection event", "error", err)
@@ -155,7 +161,7 @@ func (t *TCP) receiveMsg(conn domain.Connection, ctx context.Context) error {
 				Transport: domain.TransportTypeTCP,
 				Conn:      conn,
 				BaseEvent: events.BaseEvent{
-					EventType: domain.EventTypeClientDisconnected,
+					EventType: domain.EventTypeConnectionClosed,
 				},
 			}
 
@@ -239,7 +245,6 @@ func (t *TCP) RegisterEventBus(eb domain.IEventBus) {
 	t.logger.Info("EventBus registered with TCP", "service", t.Name())
 }
 
-// need the conn here
 func (t *TCP) handleMessageSending(ctx context.Context, ch <-chan domain.Event) {
 	for {
 		select {

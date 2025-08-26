@@ -13,15 +13,12 @@ type TransportType string
 
 const (
 	// EventTypeNewConnection is the type for new connections event.
-	EventTypeNewConnection EventType = "new_connection"
+	EventTypeNewConnection    EventType = "new_connection"
+	EventTypeConnectionClosed EventType = "close_connection"
 
 	// EventTypeSendMessage is the type for sending a msg to a transporter.
-	EventTypeSendMessage EventType = "send_message"
-
-	// EventTypeReceiveMessage is the type for receiving a msg from a transporter.
+	EventTypeSendMessage    EventType = "send_message"
 	EventTypeReceiveMessage EventType = "receive_message"
-
-	EventTypeClientDisconnected EventType = "client_disconnected"
 )
 
 const (

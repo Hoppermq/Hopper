@@ -10,10 +10,9 @@ import (
 type ExtendedFrameHeader interface {
 }
 
-// Payload represent the content of the frame in the HPMQ Protocol.
-type Payload struct {
+// BasePayload provides common payload functionality.
+type BasePayload struct {
 	Header domain.HeaderPayload
-	Data   []byte
 }
 
 // Frame represents a protocol frame in the HPMQ Protocol.
@@ -49,8 +48,24 @@ func validateFrame(header domain.HeaderFrame, payload domain.Payload) error {
 		if _, ok := payload.(domain.MessageFramePayload); !ok {
 			return domain.ErrInvalidPayload
 		}
+	case domain.FrameTypeConnect:
+		if _, ok := payload.(domain.ConnectFramePayload); !ok {
+			return domain.ErrInvalidPayload
+		}
+	case domain.FrameTypeSubscribe:
+		if _, ok := payload.(domain.SubscribeFramePayload); !ok {
+			return domain.ErrInvalidPayload
+		}
+	case domain.FrameTypeUnsubscribe:
+		if _, ok := payload.(domain.UnsubscribeFramePayload); !ok {
+			return domain.ErrInvalidPayload
+		}
 	case domain.FrameTypeClose:
-		if _, ok := payload.(domain.OpenFramePayload); !ok {
+		if _, ok := payload.(domain.CloseFramePayload); !ok {
+			return domain.ErrInvalidPayload
+		}
+	case domain.FrameTypeError:
+		if _, ok := payload.(domain.ErrorFramePayload); !ok {
 			return domain.ErrInvalidPayload
 		}
 	default:
@@ -90,26 +105,6 @@ func calculatePayloadSize(payload domain.Payload) uint16 {
 	return 0
 }
 
-func (p *Payload) Sizer() uint16 {
-	headerSize := uint16(0)
-	if p.Header != nil {
-		if sizer, ok := p.Header.(interface{ Sizer() uint16 }); ok {
-			headerSize = sizer.Sizer()
-		} else {
-			if data, err := common.Serialize(p.Header); err != nil {
-				headerSize = uint16(len(data))
-			}
-		}
-	}
-
-	dataSize := uint16(len(p.Data))
-	return headerSize + dataSize
-}
-
-func (p *Payload) GetHeader() domain.HeaderPayload {
-	return p.Header
-}
-
-func (p *Payload) GetData() []byte {
-	return p.Data
+func (bp *BasePayload) GetHeader() domain.HeaderPayload {
+	return bp.Header
 }

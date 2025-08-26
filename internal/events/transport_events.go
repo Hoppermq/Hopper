@@ -28,6 +28,19 @@ func (evt *NewConnectionEvent) GetTransport() domain.TransportType {
 	return evt.Transport
 }
 
+type ClientDisconnectEvent struct {
+	ClientID  domain.ID
+	Transport domain.TransportType
+
+	Conn domain.Connection
+
+	BaseEvent
+}
+
+func (evt *ClientDisconnectEvent) GetTransport() domain.TransportType {
+	return evt.Transport
+}
+
 type MessageReceivedEvent struct {
 	Message   []byte
 	Transport domain.TransportType
@@ -73,42 +86,4 @@ func (evt *ClientDisconnectedEvent) GetType() domain.EventType {
 
 func (evt *ClientDisconnectedEvent) GetTransport() domain.TransportType {
 	return evt.Transport
-}
-
-func NewEmitEvent(
-	eventType domain.EventType,
-	conn domain.Connection,
-) domain.Event {
-	switch eventType {
-	case domain.EventTypeNewConnection:
-		return &NewConnectionEvent{
-			Conn:      conn,
-			Transport: domain.TransportTypeTCP,
-			BaseEvent: BaseEvent{
-				EventType: domain.EventTypeNewConnection,
-			},
-		}
-	case domain.EventTypeReceiveMessage:
-		return &MessageReceivedEvent{
-			Transport: domain.TransportTypeTCP,
-			BaseEvent: BaseEvent{
-				EventType: domain.EventTypeReceiveMessage,
-			},
-		}
-	default:
-		return nil
-	}
-}
-
-func NewReceiveEvent(
-	eventType domain.EventType,
-	conn domain.Connection,
-	clientID domain.ID,
-) domain.Event {
-	switch eventType {
-	case domain.EventTypeSendMessage:
-		return &SendMessageEvent{}
-	default:
-		return nil
-	}
 }
