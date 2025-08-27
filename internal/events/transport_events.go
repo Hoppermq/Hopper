@@ -14,13 +14,26 @@ func (evt *BaseEvent) GetType() domain.EventType {
 
 type NewConnectionEvent struct {
 	Conn      domain.Connection
-	Transport string
+	Transport domain.TransportType
 
 	BaseEvent
 }
 
 func (evt *NewConnectionEvent) GetTransport() domain.TransportType {
-	return domain.TransportType(evt.Transport)
+	return evt.Transport
+}
+
+type ClientDisconnectEvent struct {
+	ClientID  domain.ID
+	Transport domain.TransportType
+
+	Conn domain.Connection
+
+	BaseEvent
+}
+
+func (evt *ClientDisconnectEvent) GetTransport() domain.TransportType {
+	return evt.Transport
 }
 
 type MessageReceivedEvent struct {
