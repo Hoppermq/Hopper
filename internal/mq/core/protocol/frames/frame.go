@@ -80,9 +80,9 @@ func CreateFrame(
 	extendedHeader ExtendedFrameHeader,
 	payload domain.Payload,
 ) (domain.Frame, error) {
-	/* if err := validateFrame(header, payload); err != nil {
-	return Frame{}, err
-	}*/
+	if err := validateFrame(header, payload); err != nil {
+		return nil, err
+	}
 
 	header.SetSize(calculatePayloadSize(payload))
 
@@ -105,6 +105,7 @@ func calculatePayloadSize(payload domain.Payload) uint16 {
 	return 0
 }
 
+// GetHeader return the frame payload header.
 func (bp *BasePayload) GetHeader() domain.HeaderPayload {
 	return bp.Header
 }

@@ -15,7 +15,7 @@ import (
 
 // Application is the application structure wrapper.
 type Application struct {
-	configuration config.Configuration
+	configuration *config.Configuration
 	logger        *slog.Logger
 
 	services []domain.Service
@@ -46,9 +46,10 @@ func WithEventBus(eb domain.IEventBus) Option {
 	}
 }
 
+// WithConfiguration inject the configuration to the application.
 func WithConfiguration(cfg *config.Configuration) Option {
 	return func(a *Application) {
-		a.configuration = *cfg
+		a.configuration = cfg
 	}
 }
 

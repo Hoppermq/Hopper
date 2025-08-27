@@ -10,6 +10,7 @@ type Serializable interface {
 	Deserialize(data []byte) (Serializable, error)
 }
 
+// Serializer is the interface for frame serialization.
 type Serializer interface {
 	SerializeFrame() ([]byte, error)
 	DeserializeFrame(data []byte) (Frame, error)

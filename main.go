@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin" // should not exist here
 	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/internal/http"
 
@@ -18,6 +18,7 @@ import (
 )
 
 const appName = "Hopper"
+const maxBuffer uint16 = 1024
 
 func main() {
 	ctx := context.Background()
@@ -40,8 +41,6 @@ func main() {
 	}
 
 	conf := &net.ListenConfig{}
-
-	eb := events.NewEventBus(1000) // should load from config
 
 	tcpHandler, err := handler.NewTCP(
 		handler.WithContext(ctx),
@@ -70,7 +69,12 @@ func main() {
 	application.New(
 		application.WithConfiguration(cfg),
 		application.WithLogger(logger),
-		application.WithEventBus(eb),
+		application.WithEventBus(
+			events.NewEventBus(
+				maxBuffer,
+				events.WithConfig(cfg),
+				), //nolint:gofmt
+		),
 		application.WithService(hopperMQService, httpServer),
 	).Start()
 }

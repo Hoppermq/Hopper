@@ -168,7 +168,6 @@ linters:
     - errchkjson
     - errname
     - errorlint
-    # - execinquery --> (deprecated)
     - exhaustive
     # - exhaustruct --> Not convinced it's useful
     # - exhaustivestruct
@@ -220,7 +219,6 @@ linters:
     - misspell
     - musttag
     - nakedret
-    # - nlreturn --> subjective rule, for example the go std lib does not use this rule
     - prealloc
     - nestif
     - nilerr

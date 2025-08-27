@@ -117,6 +117,10 @@ type Configuration struct {
 		ID          string `koanf:"id"`
 		Description string `koanf:"description"`
 	} `koanf:"app"`
+
+	EventBus struct {
+		MaxBuffer uint8 `koanf:"max_buffer"`
+	} `koanf:"eventbus"`
 }
 
 // New create a new configuration from files and env.
