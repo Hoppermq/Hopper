@@ -1,0 +1,33 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  MODULE: github.com/hoppermq/hopper
+  BUILD_DIR: ./.bin
+
+tasks:
+  # Master task that builds both binaries
+  build:
+    desc: Build both service and client binaries
+    deps: [build-service, build-client]
+    cmds:
+      - echo "✅ Both binaries built successfully!"
+
+  # Task to build the service binary
+  build-service:
+    desc: Build the Hopper service binary
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - echo "🔨 Building Hopper service..."
+      - go build -o {{.BUILD_DIR}}/hopper {{.MODULE}}
+      - echo "✅ Service binary built at {{.BUILD_DIR}}/hopper"
+
+  # Task to build the client binary
+  build-client:
+    desc: Build the Hopper client binary
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - echo "🔨 Building Hopper client..."
+      - go build -o {{.BUILD_DIR}}/hopper-client {{.MODULE}}/pkg/client
+      - echo "✅ Client binary built at {{.BUILD_DIR}}/hopper-client"
