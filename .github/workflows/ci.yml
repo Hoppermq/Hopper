@@ -20,3 +20,6 @@ jobs:
 
       - name: Linting
         uses: Hoppermq/ci-kitchenette/golang/linter@master
+
+      - name: Builder
+        uses: Hoppermq/ci-kitchenette/golang/build@master
