@@ -5,7 +5,9 @@ import (
 	"log/slog"
 	"net"
 
+	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/hopper/internal/events"
+	"github.com/hoppermq/hopper/internal/http"
 
 	"github.com/zixyos/glog"
 
@@ -56,11 +58,19 @@ func main() {
 		mq.WithTCP(tcpHandler),
 	)
 
+	httpEngine := gin.New()
+
+	httpServer := http.NewHTTPServer(
+		http.WithLogger(logger),
+		http.WithEventBus(eb),
+		http.WithEngine(httpEngine),
+	)
+
 	logger.Info("Hey Welcome to HOPPER")
 	application.New(
 		application.WithConfiguration(cfg),
 		application.WithLogger(logger),
 		application.WithEventBus(eb),
-		application.WithService(hopperMQService),
+		application.WithService(hopperMQService, httpServer),
 	).Start()
 }

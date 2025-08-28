@@ -18,10 +18,10 @@ type Application struct {
 	configuration config.Configuration
 	logger        *slog.Logger
 
-	service domain.Service
-	eb      domain.IEventBus
-	running chan bool
-	stop    chan os.Signal
+	services []domain.Service
+	eb       domain.IEventBus
+	running  chan bool
+	stop     chan os.Signal
 }
 
 // Option is the function that configure the service.
@@ -34,9 +34,9 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
-func WithService(service domain.Service) Option {
+func WithService(services ...domain.Service) Option {
 	return func(a *Application) {
-		a.service = service
+		a.services = append(a.services, services...)
 	}
 }
 
@@ -76,16 +76,19 @@ func (a *Application) Start() {
 	ctx := context.Background()
 	signal.Notify(a.stop, syscall.SIGINT, syscall.SIGTERM)
 
-	if eventBusAware, ok := a.service.(domain.EventBusAware); ok {
-		eventBusAware.RegisterEventBus(a.eb)
-	}
-
-	go func() {
-		if err := a.service.Run(ctx); err != nil {
-			a.logger.Error("Failed to start component: ", a.service.Name(), err)
-			a.stop <- syscall.SIGTERM
+	for _, s := range a.services {
+		if eventBusAware, ok := s.(domain.EventBusAware); ok {
+			eventBusAware.RegisterEventBus(a.eb)
 		}
-	}()
+
+		go func(svc domain.Service) {
+			if err := s.Run(ctx); err != nil {
+				a.logger.Error("Failed to start component: ", s.Name(), err)
+				a.stop <- syscall.SIGTERM
+			}
+		}(s)
+
+	}
 
 	a.running <- true
 	<-a.stop
@@ -94,8 +97,10 @@ func (a *Application) Start() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := a.service.Stop(shutdownCtx); err != nil {
-		a.logger.Error("Failed to stop service: ", a.service.Name(), err)
+	for _, s := range a.services {
+		if err := s.Stop(shutdownCtx); err != nil {
+			a.logger.Error("Failed to stop service: ", s.Name(), err)
+		}
 	}
 	a.logger.Info("Application STOPPED")
 }
