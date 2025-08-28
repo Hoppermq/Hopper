@@ -83,7 +83,7 @@ func (a *Application) Start() {
 		}
 
 		go func(svc domain.Service) {
-			if err := s.Run(ctx); err != nil {
+			if err := svc.Run(ctx); err != nil {
 				a.logger.Error("Failed to start component: ", s.Name(), err)
 				a.stop <- syscall.SIGTERM
 			}
@@ -92,16 +92,34 @@ func (a *Application) Start() {
 	}
 
 	a.running <- true
+	a.Stop()
+	a.logger.Info("application shutted down succesfully")
+}
+
+func (a *Application) Stop() {
+	a.logger.Info(
+		"shutting down application",
+		"name",
+		a.getName(),
+		"application_id",
+		a.getID(),
+	)
 	<-a.stop
 
-	a.logger.Info("Shutting down application")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	for _, s := range a.services {
 		if err := s.Stop(shutdownCtx); err != nil {
-			a.logger.Error("Failed to stop service: ", s.Name(), err)
+			a.logger.Error("failed to stop service: ", s.Name(), err)
 		}
 	}
-	a.logger.Info("Application STOPPED")
+}
+
+func (a *Application) getName() string {
+	return a.configuration.App.Name
+}
+
+func (a *Application) getID() domain.ID {
+	return domain.ID(a.configuration.App.ID)
 }
