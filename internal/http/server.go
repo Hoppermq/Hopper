@@ -75,7 +75,7 @@ func NewHTTPServer(opts ...Option) *HTTP {
 }
 
 func (h *HTTP) Run(ctx context.Context) error {
-	h.logger.Info("stopping the http server component", "name", h.Name())
+	h.logger.Info("starting the http server component", "name", h.Name())
 	h.eb.Subscribe(string(domain.EventTypeNewConnection))
 	h.eb.Subscribe(string(domain.EventTypeSendMessage))
 
@@ -83,7 +83,7 @@ func (h *HTTP) Run(ctx context.Context) error {
 	h.engine.Run(":8080")
 
 	go func() {
-		if err := h.server.ListenAndServe(); err == nil {
+		if err := h.server.ListenAndServe(); err != nil {
 			h.logger.Warn("error while servint http server", "error", err)
 		}
 	}()

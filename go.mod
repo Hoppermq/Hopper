@@ -9,7 +9,7 @@ require (
 	github.com/knadh/koanf/providers/file v1.2.0
 	github.com/knadh/koanf/providers/fs v1.0.0
 	github.com/knadh/koanf/v2 v2.2.2
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	github.com/zixyos/glog v0.0.0-20250115212722-50b09311b91f
 )
 
