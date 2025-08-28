@@ -16,7 +16,11 @@ import (
 )
 
 func TestCreateNewApplication(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should_create_a_new_application", func(t *testing.T) {
+		t.Parallel()
+
 		app := New()
 		assert.NotNil(t, app)
 		assert.NotNil(t, app.running)
@@ -25,6 +29,8 @@ func TestCreateNewApplication(t *testing.T) {
 	})
 
 	t.Run("should_create_application_with_options", func(t *testing.T) {
+		t.Parallel()
+
 		cfg := &config.Configuration{
 			App: struct {
 				Name        string `koanf:"name"`
@@ -55,6 +61,8 @@ func TestCreateNewApplication(t *testing.T) {
 }
 
 func TestApplication_Start(t *testing.T) {
+	t.Parallel()
+
 	cfg := &config.Configuration{
 		App: struct {
 			Name        string `koanf:"name"`
@@ -71,6 +79,8 @@ func TestApplication_Start(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	t.Run("should_start_and_stop_application_with_signal", func(t *testing.T) {
+		t.Parallel()
+
 		mockEventBus := mocks.NewMockIEventBus(t)
 		mockService := mocks.NewMockService(t)
 
@@ -106,6 +116,8 @@ func TestApplication_Start(t *testing.T) {
 	})
 
 	t.Run("should_register_event_bus_for_eventbus_aware_services", func(t *testing.T) {
+		t.Parallel()
+
 		mockEventBus := mocks.NewMockIEventBus(t)
 
 		mockService := mocks.NewMockService(t)
@@ -148,6 +160,8 @@ func TestApplication_Start(t *testing.T) {
 	})
 
 	t.Run("should_handle_service_startup_failure", func(t *testing.T) {
+		t.Parallel()
+
 		mockEventBus := mocks.NewMockIEventBus(t)
 		mockService := mocks.NewMockService(t)
 
@@ -179,6 +193,8 @@ func TestApplication_Start(t *testing.T) {
 }
 
 func TestApplication_Stop(t *testing.T) {
+	t.Parallel()
+
 	cfg := &config.Configuration{
 		App: struct {
 			Name        string `koanf:"name"`
@@ -193,6 +209,8 @@ func TestApplication_Stop(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	t.Run("should_stop_services_with_timeout", func(t *testing.T) {
+		t.Parallel()
+
 		mockEventBus := mocks.NewMockIEventBus(t)
 		mockService := mocks.NewMockService(t)
 
@@ -226,6 +244,8 @@ func TestApplication_Stop(t *testing.T) {
 }
 
 func TestApplication_getName(t *testing.T) {
+	t.Parallel()
+
 	cfg := &config.Configuration{
 		App: struct {
 			Name        string `koanf:"name"`
@@ -242,6 +262,8 @@ func TestApplication_getName(t *testing.T) {
 }
 
 func TestApplication_getID(t *testing.T) {
+	t.Parallel()
+
 	cfg := &config.Configuration{
 		App: struct {
 			Name        string `koanf:"name"`
