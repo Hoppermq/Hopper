@@ -47,8 +47,8 @@ func (b *Broker) spawnHandler(ctx context.Context, eventHandler func(ctx2 contex
 	}()
 }
 
-// Start initializes the Broker component, setting up necessary resources and preparing it to handle incoming frames and client connections.
-func (b *Broker) Start(ctx context.Context, transports ...domain.Service) error {
+// Run initializes the Broker component, setting up necessary resources and preparing it to handle incoming frames and client connections.
+func (b *Broker) Run(ctx context.Context, transports ...domain.Service) error {
 	b.Logger.Info("Starting Broker Component")
 
 	ctx, b.cancel = context.WithCancel(ctx)

@@ -84,7 +84,7 @@ func (h *HopperMQService) Run(ctx context.Context) error {
 
 	go h.startService("broker", func() error {
 		defer h.wg.Done()
-		return h.broker.Start(h.ctx, h.tcpHandler)
+		return h.broker.Run(h.ctx, h.tcpHandler)
 	})
 
 	<-h.ctx.Done()
