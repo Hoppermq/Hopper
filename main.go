@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin" // should not exist here
 	"github.com/hoppermq/hopper/internal/events"
-	"github.com/hoppermq/hopper/internal/http"
+	httpService "github.com/hoppermq/hopper/internal/http"
 
 	"github.com/zixyos/glog"
 
@@ -42,6 +42,11 @@ func main() {
 
 	conf := &net.ListenConfig{}
 
+	eb := events.NewEventBus(
+		maxBuffer,
+		events.WithConfig(cfg),
+	) //nolint:gofmt
+
 	tcpHandler, err := handler.NewTCP(
 		handler.WithContext(ctx),
 		handler.WithListener(*conf),
@@ -59,22 +64,17 @@ func main() {
 
 	httpEngine := gin.New()
 
-	httpServer := http.NewHTTPServer(
-		http.WithLogger(logger),
-		http.WithEventBus(eb),
-		http.WithEngine(httpEngine),
+	httpServer := httpService.NewHTTPServer(
+		httpService.WithLogger(logger),
+		httpService.WithEventBus(eb),
+		httpService.WithEngine(httpEngine),
 	)
 
 	logger.Info("Hey Welcome to HOPPER")
 	application.New(
 		application.WithConfiguration(cfg),
 		application.WithLogger(logger),
-		application.WithEventBus(
-			events.NewEventBus(
-				maxBuffer,
-				events.WithConfig(cfg),
-				), //nolint:gofmt
-		),
+		application.WithEventBus(eb),
 		application.WithService(hopperMQService, httpServer),
 	).Start()
 }
