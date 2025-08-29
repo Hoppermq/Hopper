@@ -4,6 +4,7 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
+// CreateOpenFrame create a new open frame.
 func CreateOpenFrame(doff domain.DOFF, sourceID domain.ID, assignedContainerID domain.ID) (domain.Frame, error) {
 	headerFrame := Header{
 		Size: 0,
@@ -20,6 +21,7 @@ func CreateOpenFrame(doff domain.DOFF, sourceID domain.ID, assignedContainerID d
 	return CreateFrame(&headerFrame, nil, payload)
 }
 
+// CreateMessageFrame create a new MessageFrame.
 func CreateMessageFrame(
 	doff domain.DOFF,
 	topic string,

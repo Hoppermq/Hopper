@@ -14,6 +14,8 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
+const maxBuffer = 1000
+
 // Application is the application structure wrapper.
 type Application struct {
 	configuration *config.Configuration
@@ -35,15 +37,17 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
+// WithService register service to the main applications.
 func WithService(services ...domain.IService) Option {
 	return func(a *Application) {
 		a.services = append(a.services, services...)
 	}
 }
 
-func WithEventBus(opts ...events.Option) Option {
+// WithEventBus inject the event bus.
+func WithEventBus(_ ...events.Option) Option {
 	return func(a *Application) {
-		a.eb = events.NewEventBus(1000) //should take the event opts config.
+		a.eb = events.NewEventBus(maxBuffer) //should take the event opts config.
 	}
 }
 
@@ -68,6 +72,7 @@ func New(opts ...Option) *Application {
 	return app
 }
 
+// Start will start all services registered to the application.
 func (a *Application) Start() {
 	a.logger.Info(
 		"Application STARTED",
@@ -95,6 +100,7 @@ func (a *Application) Start() {
 	a.logger.Info("application shutted down succesfully")
 }
 
+// Stop shutdown gracefully all services ran by the application.
 func (a *Application) Stop() {
 	a.logger.Info(
 		"shutting down application",

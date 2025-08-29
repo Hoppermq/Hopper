@@ -1,6 +1,7 @@
 package mq
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -24,7 +25,7 @@ func TestCreateService(t *testing.T) {
 			name: "Create_Service",
 			args: args{
 				opts: []Option{
-					WithTCP(),
+					WithTCP(context.Background()),
 					WithLogger(
 						slog.New(
 							slog.NewJSONHandler(os.Stdout, nil),

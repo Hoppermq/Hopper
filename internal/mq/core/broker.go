@@ -23,7 +23,7 @@ type Broker struct {
 
 	eb               domain.IEventBus
 	cm               *ClientManager
-	containerManager *container.ContainerManager
+	containerManager *container.Manager
 
 	wg     sync.WaitGroup
 	cancel context.CancelFunc

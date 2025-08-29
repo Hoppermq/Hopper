@@ -6,39 +6,46 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
-type ContainerRegistry struct {
+// Registry represent the local registry for the orchestrator.
+type Registry struct {
 	mu sync.RWMutex
 
 	data map[string]map[domain.ID]struct{}
 }
-type ContainerManager struct {
-	Registry ContainerRegistry
+
+// Manager represent the container orchestrator.
+type Manager struct {
+	Registry Registry
 
 	mut sync.RWMutex
 }
 
-func NewContainerRegistry() *ContainerRegistry {
-	return &ContainerRegistry{
+// NewContainerRegistry return a new registry.
+func NewContainerRegistry() *Registry {
+	return &Registry{
 		data: make(map[string]map[domain.ID]struct{}),
 	}
 }
 
-func NewContainerManager() *ContainerManager {
-	return &ContainerManager{
+// NewContainerManager return a new instance of the container orchestrator.
+func NewContainerManager() *Manager {
+	return &Manager{
 		Registry: *NewContainerRegistry(),
 	}
 }
 
-func (ctnrManager *ContainerManager) CreateNewContainer(
-	IDGenerator func() domain.ID,
+// CreateNewContainer create a new container.
+func (ctnrManager *Manager) CreateNewContainer(
+	idGenerator func() domain.ID,
 	clientID domain.ID,
 ) domain.Container {
-	container := NewContainer(IDGenerator(), clientID)
+	container := NewContainer(idGenerator(), clientID)
 
 	return container
 }
 
-func (rContainer *ContainerRegistry) Register(topic string, id domain.ID) {
+// Register register attach a topic to a containerID.
+func (rContainer *Registry) Register(topic string, containerID domain.ID) {
 	rContainer.mu.Lock()
 	defer rContainer.mu.Unlock()
 
@@ -46,10 +53,11 @@ func (rContainer *ContainerRegistry) Register(topic string, id domain.ID) {
 		rContainer.data[topic] = make(map[domain.ID]struct{})
 	}
 
-	rContainer.data[topic][id] = struct{}{}
+	rContainer.data[topic][containerID] = struct{}{}
 }
 
-func (rContainer *ContainerRegistry) Unregister(topic string, id domain.ID) {
+// Unregister remove a topic from a container.
+func (rContainer *Registry) Unregister(topic string, id domain.ID) {
 	rContainer.mu.Lock()
 	defer rContainer.mu.Unlock()
 
@@ -61,14 +69,16 @@ func (rContainer *ContainerRegistry) Unregister(topic string, id domain.ID) {
 	}
 }
 
-func (ctnrManager *ContainerManager) RegisterContainerToTopic(
+// RegisterContainerToTopic set a container to the registry attached to a topic.
+func (ctnrManager *Manager) RegisterContainerToTopic(
 	topic string,
 	containerID domain.ID,
 ) {
 	ctnrManager.Registry.Register(topic, containerID)
 }
 
-func (ctnrManager *ContainerManager) RemoveContainerFromTopic(
+// RemoveContainerFromTopic remove the container from the registry to it's given topic.
+func (ctnrManager *Manager) RemoveContainerFromTopic(
 	topic string,
 	containerID domain.ID,
 ) {

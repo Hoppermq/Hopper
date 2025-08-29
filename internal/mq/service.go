@@ -1,4 +1,4 @@
-// mq is the message broker package.
+// Package mq is the message broker package.
 package mq
 
 import (
@@ -13,6 +13,7 @@ import (
 	"github.com/hoppermq/hopper/internal/mq/core"
 )
 
+// HopperMQService represent the service orchestrator of the application.
 type HopperMQService struct {
 	eb domain.IEventBus
 
@@ -36,8 +37,8 @@ func WithLogger(logger *slog.Logger) Option {
 }
 
 // WithTCP inject transport.
-func WithTCP(opts ...tcp.Option) Option {
-	tcpHandler, err := tcp.NewTCP(opts...)
+func WithTCP(ctx context.Context, opts ...tcp.Option) Option {
+	tcpHandler, err := tcp.NewTCP(ctx, opts...)
 	if err != nil {
 		panic(err)
 	}
@@ -121,6 +122,7 @@ func (h *HopperMQService) Stop(ctx context.Context) error {
 	return nil
 }
 
+// RegisterEventBus register the event bus to the services.
 func (h *HopperMQService) RegisterEventBus(eb domain.IEventBus) {
 	h.eb = eb
 

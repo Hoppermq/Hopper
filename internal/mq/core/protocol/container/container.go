@@ -1,3 +1,4 @@
+// Package container represent the business logic of a container.
 package container
 
 import (
@@ -31,11 +32,12 @@ func NewChannel(generator func() domain.ID, topic string) domain.Channel {
 	}
 }
 
+// NewContainer return a new container.
 func NewContainer(ID, clientID domain.ID) domain.Container {
 	return &Container{
 		ID:              ID,
 		ClientID:        clientID,
-		State:           domain.CONTAINER_CREATED,
+		State:           domain.ContainerCreated,
 		Channels:        make(map[domain.ID]domain.Channel),
 		ChannelsByTopic: make(map[string]domain.ID),
 	}

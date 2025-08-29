@@ -12,12 +12,16 @@ type EventType string
 type TransportType string
 
 const (
-	// EventTypeNewConnection is the type for new connections event.
+	// EventTypeNewConnection is the type for new connection event.
 	EventTypeNewConnection    EventType = "new_connection"
+
+	// EventTypeConnectionClosed is the type for new closed conn event.
 	EventTypeConnectionClosed EventType = "close_connection"
 
 	// EventTypeSendMessage is the type for sending a msg to a transporter.
 	EventTypeSendMessage    EventType = "send_message"
+
+	// EventTypeReceiveMessage is the type for a received msg event.
 	EventTypeReceiveMessage EventType = "receive_message"
 )
 

@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/gin-gonic/gin" // should not exist here
+
 	"github.com/hoppermq/hopper/internal/events"
 	httpService "github.com/hoppermq/hopper/internal/http"
 
@@ -44,8 +45,8 @@ func main() {
 	hopperMQService := mq.New(
 		mq.WithLogger(logger),
 		mq.WithTCP( // should be a more generic transport configuration injection.
-			handler.WithContext(ctx),
-			handler.WithListener(*conf),
+			ctx,
+			handler.WithListener(conf),
 			handler.WithLogger(logger),
 		),
 	)

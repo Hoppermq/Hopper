@@ -1,3 +1,4 @@
+// Package http  represent the http service.
 package http
 
 import (
@@ -72,6 +73,7 @@ func NewHTTPServer(opts ...Option) *HTTP {
 	return httpServer
 }
 
+// Run start the services.
 func (h *HTTP) Run(ctx context.Context) error {
 	h.logger.Info("starting the http server component", "name", h.Name())
 	h.eb.Subscribe(string(domain.EventTypeNewConnection))

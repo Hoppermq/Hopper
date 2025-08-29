@@ -8,9 +8,10 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
+// EventBus represent the event channel manager.
 type EventBus struct {
-	mu sync.RWMutex
-	wg sync.WaitGroup
+	mu            sync.RWMutex
+	wg            sync.WaitGroup
 	configuration *config.Configuration
 
 	channels  map[domain.EventType][]domain.EventChannel
@@ -47,6 +48,7 @@ func (eb *EventBus) getSubscribers(eventType domain.EventType) []domain.EventCha
 	return subs
 }
 
+// Subscribe a service to a related topic
 func (eb *EventBus) Subscribe(eventType string) <-chan domain.Event {
 	eb.mu.Lock()
 	defer eb.mu.Unlock()
@@ -57,6 +59,7 @@ func (eb *EventBus) Subscribe(eventType string) <-chan domain.Event {
 	return ch
 }
 
+// Publish a message to a given topic to all subscribers.
 func (eb *EventBus) Publish(ctx context.Context, event domain.Event) error {
 	subs := eb.getSubscribers(event.GetType())
 

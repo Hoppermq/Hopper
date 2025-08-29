@@ -7,7 +7,7 @@ import (
 )
 
 func (t *TCP) sendMessage(d []byte, conn domain.Connection) {
-	_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second)) //nolint:mnd
 	_, err := conn.Write(d)
 	if err != nil {
 		t.logger.Warn("error sending message", "error", err)

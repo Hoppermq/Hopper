@@ -1,3 +1,4 @@
+// Package common represent the common function used by hoppermq.
 package common
 
 import (

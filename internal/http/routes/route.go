@@ -1,9 +1,15 @@
+// Package routes represents the http routes package.
 package routes
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
 
+	"github.com/gin-gonic/gin"
+)
+
+// RegisterBaseRoutes register http routes
 func RegisterBaseRoutes(e *gin.Engine) {
 	e.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, "hello world")
+		ctx.JSON(http.StatusOK, "hello world")
 	})
 }
