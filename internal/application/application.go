@@ -75,7 +75,7 @@ func New(opts ...Option) *Application {
 // Start will start all services registered to the application.
 func (a *Application) Start() {
 	a.logger.Info(
-		"Application STARTED",
+		"application started",
 		"name", a.configuration.App.Name,
 		"version", a.configuration.App.Version,
 		"id", a.configuration.App.ID,
@@ -88,7 +88,13 @@ func (a *Application) Start() {
 			svc.RegisterEventBus(a.eb)
 
 			if err := svc.Run(ctx); err != nil {
-				a.logger.Error("Failed to start component: ", s.Name(), err)
+				a.logger.Error(
+					"failed to start component",
+					"component",
+					s.Name(),
+					"error",
+					err,
+				)
 				a.stop <- syscall.SIGTERM
 			}
 		}(s)
@@ -97,7 +103,7 @@ func (a *Application) Start() {
 
 	a.running <- true
 	a.Stop()
-	a.logger.Info("application shutted down succesfully")
+	a.logger.Info("application shut down successfully")
 }
 
 // Stop shutdown gracefully all services ran by the application.

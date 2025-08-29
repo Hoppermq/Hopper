@@ -82,8 +82,8 @@ func (_c *MockConnection_Close_Call) RunAndReturn(run func() error) *MockConnect
 }
 
 // Read provides a mock function for the type MockConnection
-func (_mock *MockConnection) Read(bytes []byte) (int, error) {
-	ret := _mock.Called(bytes)
+func (_mock *MockConnection) Read(b []byte) (int, error) {
+	ret := _mock.Called(b)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Read")
@@ -92,15 +92,15 @@ func (_mock *MockConnection) Read(bytes []byte) (int, error) {
 	var r0 int
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func([]byte) (int, error)); ok {
-		return returnFunc(bytes)
+		return returnFunc(b)
 	}
 	if returnFunc, ok := ret.Get(0).(func([]byte) int); ok {
-		r0 = returnFunc(bytes)
+		r0 = returnFunc(b)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 	if returnFunc, ok := ret.Get(1).(func([]byte) error); ok {
-		r1 = returnFunc(bytes)
+		r1 = returnFunc(b)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -113,12 +113,12 @@ type MockConnection_Read_Call struct {
 }
 
 // Read is a helper method to define mock.On call
-//   - bytes []byte
-func (_e *MockConnection_Expecter) Read(bytes interface{}) *MockConnection_Read_Call {
-	return &MockConnection_Read_Call{Call: _e.mock.On("Read", bytes)}
+//   - b []byte
+func (_e *MockConnection_Expecter) Read(b interface{}) *MockConnection_Read_Call {
+	return &MockConnection_Read_Call{Call: _e.mock.On("Read", b)}
 }
 
-func (_c *MockConnection_Read_Call) Run(run func(bytes []byte)) *MockConnection_Read_Call {
+func (_c *MockConnection_Read_Call) Run(run func(b []byte)) *MockConnection_Read_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 []byte
 		if args[0] != nil {
@@ -136,7 +136,7 @@ func (_c *MockConnection_Read_Call) Return(n int, err error) *MockConnection_Rea
 	return _c
 }
 
-func (_c *MockConnection_Read_Call) RunAndReturn(run func(bytes []byte) (int, error)) *MockConnection_Read_Call {
+func (_c *MockConnection_Read_Call) RunAndReturn(run func(b []byte) (int, error)) *MockConnection_Read_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -295,8 +295,8 @@ func (_c *MockConnection_SetWriteDeadline_Call) RunAndReturn(run func(t time.Tim
 }
 
 // Write provides a mock function for the type MockConnection
-func (_mock *MockConnection) Write(bytes []byte) (int, error) {
-	ret := _mock.Called(bytes)
+func (_mock *MockConnection) Write(b []byte) (int, error) {
+	ret := _mock.Called(b)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Write")
@@ -305,15 +305,15 @@ func (_mock *MockConnection) Write(bytes []byte) (int, error) {
 	var r0 int
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func([]byte) (int, error)); ok {
-		return returnFunc(bytes)
+		return returnFunc(b)
 	}
 	if returnFunc, ok := ret.Get(0).(func([]byte) int); ok {
-		r0 = returnFunc(bytes)
+		r0 = returnFunc(b)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 	if returnFunc, ok := ret.Get(1).(func([]byte) error); ok {
-		r1 = returnFunc(bytes)
+		r1 = returnFunc(b)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -326,12 +326,12 @@ type MockConnection_Write_Call struct {
 }
 
 // Write is a helper method to define mock.On call
-//   - bytes []byte
-func (_e *MockConnection_Expecter) Write(bytes interface{}) *MockConnection_Write_Call {
-	return &MockConnection_Write_Call{Call: _e.mock.On("Write", bytes)}
+//   - b []byte
+func (_e *MockConnection_Expecter) Write(b interface{}) *MockConnection_Write_Call {
+	return &MockConnection_Write_Call{Call: _e.mock.On("Write", b)}
 }
 
-func (_c *MockConnection_Write_Call) Run(run func(bytes []byte)) *MockConnection_Write_Call {
+func (_c *MockConnection_Write_Call) Run(run func(b []byte)) *MockConnection_Write_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 []byte
 		if args[0] != nil {
@@ -349,7 +349,7 @@ func (_c *MockConnection_Write_Call) Return(n int, err error) *MockConnection_Wr
 	return _c
 }
 
-func (_c *MockConnection_Write_Call) RunAndReturn(run func(bytes []byte) (int, error)) *MockConnection_Write_Call {
+func (_c *MockConnection_Write_Call) RunAndReturn(run func(b []byte) (int, error)) *MockConnection_Write_Call {
 	_c.Call.Return(run)
 	return _c
 }

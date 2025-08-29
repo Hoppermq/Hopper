@@ -83,6 +83,11 @@ func (h *HopperMQService) Run(ctx context.Context) error {
 	ctx, h.cancel = context.WithCancel(ctx) // should be init at the main prob
 	h.wg.Add(1)
 
+	if h.eb == nil {
+		h.logger.Warn("no service bus available")
+		return errors.New("no service bus available")
+	}
+
 	go h.startService("broker", func() error {
 		defer h.wg.Done()
 		if err := h.broker.Run(ctx); err != nil {
