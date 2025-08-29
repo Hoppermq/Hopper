@@ -18,7 +18,6 @@ import (
 )
 
 const appName = "Hopper"
-const maxBuffer uint16 = 1024
 
 func main() {
 	ctx := context.Background()
@@ -42,31 +41,19 @@ func main() {
 
 	conf := &net.ListenConfig{}
 
-	eb := events.NewEventBus(
-		maxBuffer,
-		events.WithConfig(cfg),
-	) //nolint:gofmt
-
-	tcpHandler, err := handler.NewTCP(
-		handler.WithContext(ctx),
-		handler.WithListener(*conf),
-		handler.WithLogger(logger),
-	)
-
-	if err != nil {
-		panic(err)
-	}
-
 	hopperMQService := mq.New(
 		mq.WithLogger(logger),
-		mq.WithTCP(tcpHandler),
+		mq.WithTCP( // should be a more generic transport configuration injection.
+			handler.WithContext(ctx),
+			handler.WithListener(*conf),
+			handler.WithLogger(logger),
+		),
 	)
 
 	httpEngine := gin.New()
 
 	httpServer := httpService.NewHTTPServer(
 		httpService.WithLogger(logger),
-		httpService.WithEventBus(eb),
 		httpService.WithEngine(httpEngine),
 	)
 
@@ -74,7 +61,9 @@ func main() {
 	application.New(
 		application.WithConfiguration(cfg),
 		application.WithLogger(logger),
-		application.WithEventBus(eb),
+		application.WithEventBus(
+			events.WithConfig(cfg),
+		), // should create it with no parameter
 		application.WithService(hopperMQService, httpServer),
 	).Start()
 }

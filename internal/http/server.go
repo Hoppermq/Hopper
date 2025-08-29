@@ -33,30 +33,28 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
+// WithContext inject the cancelfunc ctx.
 func WithContext(ctx context.CancelFunc) Option {
 	return func(h *HTTP) {
 		h.cancel = ctx
 	}
 }
 
-func WithEventBus(eb domain.IEventBus) Option {
-	return func(h *HTTP) {
-		h.eb = eb
-	}
-}
-
+// WithConfiguration inject the configuration.
 func WithConfiguration(cfg *config.Configuration) Option {
 	return func(h *HTTP) {
 		h.config = cfg
 	}
 }
 
+// WithEngine inject the http engine.
 func WithEngine(engine *gin.Engine) Option {
 	return func(h *HTTP) {
 		h.engine = engine
 	}
 }
 
+// NewHTTPServer return a new HTTP.
 func NewHTTPServer(opts ...Option) *HTTP {
 	httpServer := &HTTP{}
 
@@ -80,11 +78,13 @@ func (h *HTTP) Run(ctx context.Context) error {
 	h.eb.Subscribe(string(domain.EventTypeSendMessage))
 
 	routes.RegisterBaseRoutes(h.engine)
-	h.engine.Run(":8080")
+	if err := h.engine.Run(":8080"); err != nil {
+		h.logger.Warn("http server stopped", "error", err)
+	}
 
 	go func() {
 		if err := h.server.ListenAndServe(); err != nil {
-			h.logger.Warn("error while servint http server", "error", err)
+			h.logger.Warn("error while serving http server", "error", err)
 		}
 	}()
 
@@ -92,10 +92,17 @@ func (h *HTTP) Run(ctx context.Context) error {
 	return nil
 }
 
+// Stop shutdown gracefully the http service.
 func (h *HTTP) Stop(ctx context.Context) error {
 	return nil
 }
 
+// Name return the service name.
 func (h *HTTP) Name() string {
 	return "hopper-http-server"
+}
+
+// RegisterEventBus attach the event bus to the service.
+func (h *HTTP) RegisterEventBus(eb domain.IEventBus) {
+	h.eb = eb
 }

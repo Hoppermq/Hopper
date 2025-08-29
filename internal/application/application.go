@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hoppermq/hopper/internal/config"
+	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
@@ -18,7 +19,7 @@ type Application struct {
 	configuration *config.Configuration
 	logger        *slog.Logger
 
-	services []domain.Service
+	services []domain.IService
 	eb       domain.IEventBus
 	running  chan bool
 	stop     chan os.Signal
@@ -34,15 +35,15 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
-func WithService(services ...domain.Service) Option {
+func WithService(services ...domain.IService) Option {
 	return func(a *Application) {
 		a.services = append(a.services, services...)
 	}
 }
 
-func WithEventBus(eb domain.IEventBus) Option {
+func WithEventBus(opts ...events.Option) Option {
 	return func(a *Application) {
-		a.eb = eb
+		a.eb = events.NewEventBus(1000) //should take the event opts config.
 	}
 }
 
@@ -78,11 +79,9 @@ func (a *Application) Start() {
 	signal.Notify(a.stop, syscall.SIGINT, syscall.SIGTERM)
 
 	for _, s := range a.services {
-		if eventBusAware, ok := s.(domain.EventBusAware); ok {
-			eventBusAware.RegisterEventBus(a.eb)
-		}
+		go func(svc domain.IService) {
+			svc.RegisterEventBus(a.eb)
 
-		go func(svc domain.Service) {
 			if err := svc.Run(ctx); err != nil {
 				a.logger.Error("Failed to start component: ", s.Name(), err)
 				a.stop <- syscall.SIGTERM

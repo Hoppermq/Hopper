@@ -1,4 +1,4 @@
-package application
+package mq
 
 import (
 	"log/slog"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateApplication(t *testing.T) {
+func TestCreateService(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		opts []Option
@@ -21,9 +21,10 @@ func TestCreateApplication(t *testing.T) {
 		wantErr assert.ValueAssertionFunc
 	}{
 		{
-			name: "Create_New_Application",
+			name: "Create_Service",
 			args: args{
 				opts: []Option{
+					WithTCP(),
 					WithLogger(
 						slog.New(
 							slog.NewJSONHandler(os.Stdout, nil),
@@ -43,4 +44,5 @@ func TestCreateApplication(t *testing.T) {
 			assert.Equal(t, tt.want, got != nil)
 		})
 	}
+
 }

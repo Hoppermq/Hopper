@@ -2,10 +2,12 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"log/slog"
 	"sync"
 
+	"github.com/hoppermq/hopper/internal/common"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
 	"github.com/hoppermq/hopper/pkg/domain"
@@ -16,6 +18,7 @@ type Broker struct {
 	Logger *slog.Logger
 
 	services   []domain.Service
+	transports []domain.Transport
 	Serializer *serializer.Serializer // should create a domain type here
 
 	eb               domain.IEventBus
@@ -27,14 +30,26 @@ type Broker struct {
 }
 
 // NewBroker creates a new Broker instance with all its core dependencies
-func NewBroker(logger *slog.Logger, serializer *serializer.Serializer) *Broker {
+func NewBroker(
+	logger *slog.Logger,
+	eb domain.IEventBus,
+	transports ...domain.Transport,
+) *Broker {
+	newSerializer := serializer.NewSerializer(
+		common.NewPool(func() *bytes.Buffer {
+			return &bytes.Buffer{}
+		}),
+	)
+
 	broker := &Broker{
 		Logger:     logger,
-		Serializer: serializer,
+		Serializer: newSerializer,
+		eb:         eb,
 	}
 
 	broker.cm = NewClientManager(broker)
 	broker.containerManager = container.NewContainerManager()
+	broker.transports = append(broker.transports, transports...)
 
 	return broker
 }
@@ -47,8 +62,8 @@ func (b *Broker) spawnHandler(ctx context.Context, eventHandler func(ctx2 contex
 	}()
 }
 
-// Run initializes the Broker component, setting up necessary resources and preparing it to handle incoming frames and client connections.
-func (b *Broker) Run(ctx context.Context, transports ...domain.Service) error {
+// Run initializes the Broker component.
+func (b *Broker) Run(ctx context.Context) error {
 	b.Logger.Info("Starting Broker Component")
 
 	ctx, b.cancel = context.WithCancel(ctx)
@@ -69,7 +84,7 @@ func (b *Broker) Run(ctx context.Context, transports ...domain.Service) error {
 		b.onClientDisconnect(ctx, closedConnCh)
 	})
 
-	for _, transport := range transports {
+	for _, transport := range b.transports {
 		go func(t domain.Service) {
 			if err := t.Run(ctx); err != nil {
 				b.Logger.Error("Failed to start transport", "error", err)
@@ -81,7 +96,7 @@ func (b *Broker) Run(ctx context.Context, transports ...domain.Service) error {
 	return nil
 }
 
-// Stop gracefully shuts down the Broker component, ensuring that all ongoing operations are completed and resources are released.
+// Stop gracefully shuts down the Broker component.
 func (b *Broker) Stop(ctx context.Context) error {
 	b.Logger.Info("Stopping Broker Component")
 

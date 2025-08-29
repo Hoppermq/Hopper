@@ -7,6 +7,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/hoppermq/hopper/pkg/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -132,6 +133,46 @@ func (_c *MockTransport_Name_Call) RunAndReturn(run func() string) *MockTranspor
 	return _c
 }
 
+// RegisterEventBus provides a mock function for the type MockTransport
+func (_mock *MockTransport) RegisterEventBus(eb domain.IEventBus) {
+	_mock.Called(eb)
+	return
+}
+
+// MockTransport_RegisterEventBus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RegisterEventBus'
+type MockTransport_RegisterEventBus_Call struct {
+	*mock.Call
+}
+
+// RegisterEventBus is a helper method to define mock.On call
+//   - eb domain.IEventBus
+func (_e *MockTransport_Expecter) RegisterEventBus(eb interface{}) *MockTransport_RegisterEventBus_Call {
+	return &MockTransport_RegisterEventBus_Call{Call: _e.mock.On("RegisterEventBus", eb)}
+}
+
+func (_c *MockTransport_RegisterEventBus_Call) Run(run func(eb domain.IEventBus)) *MockTransport_RegisterEventBus_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 domain.IEventBus
+		if args[0] != nil {
+			arg0 = args[0].(domain.IEventBus)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockTransport_RegisterEventBus_Call) Return() *MockTransport_RegisterEventBus_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *MockTransport_RegisterEventBus_Call) RunAndReturn(run func(eb domain.IEventBus)) *MockTransport_RegisterEventBus_Call {
+	_c.Run(run)
+	return _c
+}
+
 // Run provides a mock function for the type MockTransport
 func (_mock *MockTransport) Run(ctx context.Context) error {
 	ret := _mock.Called(ctx)
@@ -179,57 +220,6 @@ func (_c *MockTransport_Run_Call) Return(err error) *MockTransport_Run_Call {
 }
 
 func (_c *MockTransport_Run_Call) RunAndReturn(run func(ctx context.Context) error) *MockTransport_Run_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Start provides a mock function for the type MockTransport
-func (_mock *MockTransport) Start(ctx context.Context) error {
-	ret := _mock.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Start")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = returnFunc(ctx)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockTransport_Start_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Start'
-type MockTransport_Start_Call struct {
-	*mock.Call
-}
-
-// Start is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *MockTransport_Expecter) Start(ctx interface{}) *MockTransport_Start_Call {
-	return &MockTransport_Start_Call{Call: _e.mock.On("Start", ctx)}
-}
-
-func (_c *MockTransport_Start_Call) Run(run func(ctx context.Context)) *MockTransport_Start_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		run(
-			arg0,
-		)
-	})
-	return _c
-}
-
-func (_c *MockTransport_Start_Call) Return(err error) *MockTransport_Start_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockTransport_Start_Call) RunAndReturn(run func(ctx context.Context) error) *MockTransport_Start_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -17,7 +17,7 @@ type EventBus struct {
 	maxBuffer uint16
 }
 
-func NewEventBus(maxBuffer uint16, opts ...Option) *EventBus {
+func NewEventBus(maxBuffer uint16) *EventBus {
 	return &EventBus{
 		channels:  make(map[domain.EventType][]domain.EventChannel),
 		maxBuffer: maxBuffer,
