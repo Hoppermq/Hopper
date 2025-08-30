@@ -66,4 +66,22 @@ func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewC
 
 func (b *Broker) handleConnectionClosed(ctx context.Context, evt *events.ClientDisconnectEvent) {
 	b.Logger.Info("client disconnected event", "client", evt.ClientID)
+
+	b.cm.RemoveClient(evt.ClientID)
+
+	// TODO: Implement container cleanup if needed
+}
+
+func (b *Broker) handleConnectionClosedByConn(ctx context.Context, evt *events.ClientDisconnectedEvent) {
+	client := b.cm.GetClientByConnection(evt.Conn)
+	if client == nil {
+		b.Logger.Warn("client not found for disconnected connection")
+		return
+	}
+
+	b.Logger.Info("client disconnected event", "client", client.ID)
+
+	b.cm.RemoveClient(client.ID)
+
+	// TODO: Implement container cleanup if needed
 }

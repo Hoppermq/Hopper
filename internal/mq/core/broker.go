@@ -104,6 +104,16 @@ func (b *Broker) Stop(ctx context.Context) error {
 		b.cancel()
 	}
 
+	if b.cm != nil {
+		if err := b.cm.Shutdown(ctx); err != nil {
+			b.Logger.Error("failed to shutdown client manager", "error", err)
+		} else {
+			b.Logger.Info("Client manager shutdown successfully")
+		}
+	}
+
+	b.wg.Wait()
+
 	for _, service := range b.services {
 		if err := service.Stop(ctx); err != nil {
 			b.Logger.Error("Failed to stop service", "service", service.Name(), "error", err)

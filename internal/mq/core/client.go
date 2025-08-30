@@ -9,9 +9,10 @@ import (
 
 // Client represents a single client connection to the broker.
 type Client struct {
-	ID   domain.ID
-	Conn domain.Connection
-	Mut  sync.Mutex
+	ID     domain.ID
+	Conn   domain.Connection
+	Mut    sync.Mutex
+	closed bool
 }
 
 // ClientManager is responsible for managing client connections to the broker.
@@ -53,10 +54,17 @@ func (cm *ClientManager) RemoveClient(clientID domain.ID) {
 	defer cm.mut.Unlock()
 
 	if client, exists := cm.client[clientID]; exists {
-		err := client.Conn.Close()
-		if err != nil {
-			return
+		client.Mut.Lock()
+		if !client.closed && client.Conn != nil {
+			err := client.Conn.Close()
+			if err != nil {
+				client.Mut.Unlock()
+				return
+			}
+			client.closed = true
 		}
+		client.Mut.Unlock()
+
 		delete(cm.client, clientID)
 		return
 	}
@@ -89,9 +97,13 @@ func (cm *ClientManager) Shutdown(ctx context.Context) error {
 	defer cm.mut.Unlock()
 
 	for id, client := range cm.client {
-		if client.Conn != nil {
-			client.Conn.Close() // Ignore error as we're shutting down
+		client.Mut.Lock()
+		if !client.closed && client.Conn != nil {
+			client.Conn.Close()
+			client.closed = true
 		}
+		client.Mut.Unlock()
+
 		delete(cm.client, id)
 	}
 
