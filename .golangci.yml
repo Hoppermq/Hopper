@@ -208,7 +208,7 @@ linters:
     # - intrange
     - interfacebloat
     # - interfacer --> (deprecated)
-    - ireturn
+    # - ireturn --> disabled to allow interface returns (DIP compliance)
     - lll
     - loggercheck
     # - maintidx --> deplicates gocyclo

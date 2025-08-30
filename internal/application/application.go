@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/hoppermq/hopper/internal/config"
-	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
@@ -45,9 +44,9 @@ func WithService(services ...domain.IService) Option {
 }
 
 // WithEventBus inject the event bus.
-func WithEventBus(_ ...events.Option) Option {
+func WithEventBus(eventBus domain.IEventBus) Option {
 	return func(a *Application) {
-		a.eb = events.NewEventBus(maxBuffer) //should take the event opts config.
+		a.eb = eventBus
 	}
 }
 

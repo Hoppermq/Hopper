@@ -94,7 +94,7 @@ func TestCreateApplication(t *testing.T) {
 							ID:      "hopper-test-id",
 						},
 					}),
-					WithEventBus(events.WithConfig(&config.Configuration{})),
+					WithEventBus(events.NewEventBus(1000)),
 				},
 			},
 			want: true,

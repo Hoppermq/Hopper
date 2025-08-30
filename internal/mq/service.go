@@ -7,10 +7,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/hoppermq/hopper/internal/mq/transport/tcp"
 	"github.com/hoppermq/hopper/pkg/domain"
-
-	"github.com/hoppermq/hopper/internal/mq/core"
 )
 
 // HopperMQService represent the service orchestrator of the application.
@@ -36,15 +33,24 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
-// WithTCP inject transport.
-func WithTCP(ctx context.Context, opts ...tcp.Option) Option {
-	tcpHandler, err := tcp.NewTCP(ctx, opts...)
-	if err != nil {
-		panic(err)
-	}
-
+// WithBroker inject broker service.
+func WithBroker(broker domain.IService) Option {
 	return func(s *HopperMQService) {
-		s.tcpHandler = tcpHandler
+		s.broker = broker
+	}
+}
+
+// WithTransport inject transport layer.
+func WithTransport(transport domain.Transport) Option {
+	return func(s *HopperMQService) {
+		s.tcpHandler = transport
+	}
+}
+
+// WithEventBus inject event bus.
+func WithEventBus(eventBus domain.IEventBus) Option {
+	return func(s *HopperMQService) {
+		s.eb = eventBus
 	}
 }
 
@@ -54,12 +60,6 @@ func New(opts ...Option) *HopperMQService {
 	for _, opt := range opts {
 		opt(service)
 	}
-
-	service.broker = core.NewBroker(
-		service.logger,
-		service.eb,
-		service.tcpHandler,
-	)
 
 	return service
 }

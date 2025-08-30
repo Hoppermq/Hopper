@@ -36,4 +36,5 @@ type Container interface {
 
 // Channel represent the channel used by container.
 type Channel interface {
+	GetID() ID
 }

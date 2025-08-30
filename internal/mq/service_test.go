@@ -42,7 +42,7 @@ func TestCreateService(t *testing.T) {
 				service := value.(*HopperMQService)
 				return assert.Equal(t, "hopper-mq", service.Name()) &&
 					assert.NotNil(t, service.logger) &&
-					assert.NotNil(t, service.broker)
+					assert.Nil(t, service.broker)
 			},
 		},
 		{
@@ -61,7 +61,7 @@ func TestCreateService(t *testing.T) {
 				service := value.(*HopperMQService)
 				return assert.Equal(t, "hopper-mq", service.Name()) &&
 					assert.NotNil(t, service.logger) &&
-					assert.NotNil(t, service.broker) &&
+					assert.Nil(t, service.broker) &&
 					assert.Nil(t, service.tcpHandler)
 			},
 		},
@@ -74,7 +74,7 @@ func TestCreateService(t *testing.T) {
 			wantErr: func(t assert.TestingT, value interface{}, msgAndArgs ...interface{}) bool {
 				service := value.(*HopperMQService)
 				return assert.Equal(t, "hopper-mq", service.Name()) &&
-					assert.NotNil(t, service.broker) &&
+					assert.Nil(t, service.broker) &&
 					assert.Nil(t, service.logger) &&
 					assert.Nil(t, service.tcpHandler)
 			},
