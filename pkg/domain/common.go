@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 // ID represent the business type of identifier.
 type ID string
@@ -27,3 +29,5 @@ type Connection interface {
 	SetReadDeadline(t time.Time) error
 	SetWriteDeadline(t time.Time) error
 }
+
+type Generator func() ID

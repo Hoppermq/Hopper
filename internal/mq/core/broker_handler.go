@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 
+	"github.com/hoppermq/hopper/internal/common"
 	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
@@ -12,7 +13,7 @@ import (
 func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewConnectionEvent) {
 	client := b.cm.HandleNewClient(evt.Conn)
 	ctnr := b.containerManager.CreateNewContainer(
-		GenerateIdentifier,
+		common.GenerateIdentifier,
 		client.ID,
 	)
 	b.Logger.Info(

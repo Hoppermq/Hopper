@@ -47,7 +47,7 @@ func NewBroker(
 		eb:         eb,
 	}
 
-	broker.cm = NewClientManager(broker)
+	broker.cm = NewClientManager(common.GenerateIdentifier) // should be created from the main
 	broker.containerManager = container.NewContainerManager()
 	broker.transports = append(broker.transports, transports...)
 

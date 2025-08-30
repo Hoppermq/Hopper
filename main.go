@@ -22,7 +22,7 @@ import (
 
 const (
 	appName = "Hopper"
-	maxBufferSize = 1024 * 1024
+	maxBufferSize  = 1024
 )
 
 func main() {

@@ -72,7 +72,7 @@ func (h *HopperMQService) Name() string {
 func (h *HopperMQService) startService(name string, runner func() error) {
 	h.logger.Info("Starting service", "service", name)
 	if err := runner(); err != nil && !errors.Is(err, context.Canceled) {
-		h.logger.Error("Service failed", "service", name, "error", err)
+		h.logger.Error("service failed to startup", "service", name, "error", err)
 
 		h.cancel()
 	}
@@ -85,7 +85,7 @@ func (h *HopperMQService) Run(ctx context.Context) error {
 
 	if h.eb == nil {
 		h.logger.Warn("no service bus available")
-		return errors.New("no service bus available")
+		return domain.ErrNoServiceAvailable
 	}
 
 	go h.startService("broker", func() error {
@@ -128,13 +128,13 @@ func (h *HopperMQService) Stop(ctx context.Context) error {
 }
 
 // RegisterEventBus register the event bus to the services.
-func (h *HopperMQService) RegisterEventBus(eb domain.IEventBus) {
-	h.eb = eb
+func (h *HopperMQService) RegisterEventBus(bus domain.IEventBus) {
+	h.eb = bus
 
 	if h.broker != nil {
-		h.broker.RegisterEventBus(eb)
+		h.broker.RegisterEventBus(bus)
 	}
 	if h.tcpHandler != nil {
-		h.tcpHandler.RegisterEventBus(eb)
+		h.tcpHandler.RegisterEventBus(bus)
 	}
 }
