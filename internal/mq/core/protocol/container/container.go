@@ -38,7 +38,7 @@ func NewChannel(generator func() domain.ID, topic string) *Channel {
 }
 
 // NewContainer return a new container.
-func NewContainer(id, clientID domain.ID) domain.Container {
+func NewContainer(id, clientID domain.ID) *Container {
 	return &Container{
 		ID:              id,
 		ClientID:        clientID,
@@ -49,43 +49,33 @@ func NewContainer(id, clientID domain.ID) domain.Container {
 }
 
 // CreateChannel create a new Channel and attach it to the container.
-func (ctnr *Container) CreateChannel(
+func (ctr *Container) CreateChannel(
 	topic string,
 	generateIdentifier func() domain.ID,
-) domain.Channel {
+) *Channel {
 	channel := NewChannel(generateIdentifier, topic)
-	ctnr.Channels[domain.ID(channel.ID)] = channel
-	ctnr.ChannelsByTopic[topic] = channel.ID
+	ctr.Channels[channel.ID] = channel
+	ctr.ChannelsByTopic[topic] = channel.ID
 
 	return channel
 }
 
 // RemoveChannel remove the channel from the container.
-func (ctnr *Container) RemoveChannel(topic string) {
-	chanToRemove := ctnr.findChannelByTopic(topic)
+func (ctr *Container) RemoveChannel(topic string) {
+	chanToRemove := ctr.findChannelByTopic(topic)
 	if chanToRemove != nil {
-		delete(ctnr.Channels, chanToRemove.GetID())
-		delete(ctnr.ChannelsByTopic, topic)
+		delete(ctr.Channels, chanToRemove.GetID())
+		delete(ctr.ChannelsByTopic, topic)
 	}
 }
 
-// TODO: Move to repository.
-func (ctnr *Container) findChannelByTopic(topic string) domain.Channel {
-	if channelID, ok := ctnr.ChannelsByTopic[topic]; ok {
-		return ctnr.Channels[channelID]
-	}
-	return nil
+
+// SetState set the current container state.
+func (ctr *Container) SetState(state domain.ContainerState) {
+	ctr.State = state
 }
 
-// TODO: Move to repository.
-func (ctnr *Container) findChannelByID(ID domain.ID) domain.Channel {
-	return ctnr.Channels[ID]
-}
-
-func (ctnr *Container) SetState(state domain.ContainerState) {
-	ctnr.State = state
-}
-
-func (ctnr *Container) GetID() domain.ID {
-	return ctnr.ID
+// GetID return the containerID.
+func (ctr *Container) GetID() domain.ID {
+	return ctr.ID
 }

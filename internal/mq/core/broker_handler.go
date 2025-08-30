@@ -5,29 +5,28 @@ import (
 
 	"github.com/hoppermq/hopper/internal/common"
 	"github.com/hoppermq/hopper/internal/events"
-	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
 func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewConnectionEvent) {
 	client := b.cm.HandleNewClient(evt.Conn)
-	ctnr := b.containerManager.CreateNewContainer(
+	ctr := b.containerManager.CreateNewContainer(
 		common.GenerateIdentifier,
 		client.ID,
 	)
 	b.Logger.Info(
 		"new container created",
 		"container_id",
-		ctnr.GetID(),
+		ctr.GetID(),
 		"current_state",
-		ctnr.(*container.Container).State,
+		ctr.State,
 	)
 	frameHeaderPayload := &frames.PayloadHeader{}
 	framePayload := frames.CreateOpenFramePayload(
 		frameHeaderPayload,
 		client.ID,
-		ctnr.GetID(),
+		ctr.GetID(),
 	)
 
 	frame, err := frames.CreateFrame(
@@ -68,8 +67,6 @@ func (b *Broker) handleConnectionClosed(ctx context.Context, evt *events.ClientD
 	b.Logger.Info("client disconnected event", "client", evt.ClientID)
 
 	b.cm.RemoveClient(evt.ClientID)
-
-	// TODO: Implement container cleanup if needed
 }
 
 func (b *Broker) handleConnectionClosedByConn(ctx context.Context, evt *events.ClientDisconnectedEvent) {
@@ -82,6 +79,4 @@ func (b *Broker) handleConnectionClosedByConn(ctx context.Context, evt *events.C
 	b.Logger.Info("client disconnected event", "client", client.ID)
 
 	b.cm.RemoveClient(client.ID)
-
-	// TODO: Implement container cleanup if needed
 }
