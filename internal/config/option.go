@@ -4,7 +4,7 @@ import (
 	"embed"
 )
 
-// type Option is a function that modify the configuration.
+// Option type is a function that modify the configuration.
 type Option func(*config) error
 
 // WithFs set the embed fs to the config struct.

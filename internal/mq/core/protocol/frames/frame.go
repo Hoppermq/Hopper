@@ -22,14 +22,17 @@ type Frame struct {
 	Payload        domain.Payload
 }
 
+// GetHeader return the frame header.
 func (f Frame) GetHeader() domain.HeaderFrame {
 	return f.Header
 }
 
+// GetPayload return the frame payload.
 func (f Frame) GetPayload() domain.Payload {
 	return f.Payload
 }
 
+// GetType return the frame type.
 func (f Frame) GetType() domain.FrameType {
 	return f.Header.GetFrameType()
 }
@@ -79,14 +82,14 @@ func CreateFrame(
 	header domain.HeaderFrame,
 	extendedHeader ExtendedFrameHeader,
 	payload domain.Payload,
-) (domain.Frame, error) {
-	/* if err := validateFrame(header, payload); err != nil {
-	return Frame{}, err
-	}*/
+) (*Frame, error) {
+	if err := validateFrame(header, payload); err != nil {
+		return nil, err
+	}
 
 	header.SetSize(calculatePayloadSize(payload))
 
-	return Frame{
+	return &Frame{
 		Header:         header,
 		ExtendedHeader: extendedHeader,
 		Payload:        payload,
@@ -105,6 +108,7 @@ func calculatePayloadSize(payload domain.Payload) uint16 {
 	return 0
 }
 
+// GetHeader return the frame payload header.
 func (bp *BasePayload) GetHeader() domain.HeaderPayload {
 	return bp.Header
 }

@@ -4,12 +4,15 @@ import (
 	"context"
 	"sync"
 
+	"github.com/hoppermq/hopper/internal/config"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
+// EventBus represent the event channel manager.
 type EventBus struct {
-	mu sync.RWMutex
-	wg sync.WaitGroup
+	mu            sync.RWMutex
+	wg            sync.WaitGroup
+	configuration *config.Configuration
 
 	channels  map[domain.EventType][]domain.EventChannel
 	maxBuffer uint16
@@ -19,6 +22,17 @@ func NewEventBus(maxBuffer uint16) *EventBus {
 	return &EventBus{
 		channels:  make(map[domain.EventType][]domain.EventChannel),
 		maxBuffer: maxBuffer,
+	}
+}
+
+// Option type represent the options of the event bus.
+type Option func(*EventBus)
+
+// WithConfig inject the configuration to the event bus.
+func WithConfig(cfg *config.Configuration) Option {
+	return func(e *EventBus) {
+		println("config:", cfg)
+		e.configuration = cfg
 	}
 }
 
@@ -34,6 +48,7 @@ func (eb *EventBus) getSubscribers(eventType domain.EventType) []domain.EventCha
 	return subs
 }
 
+// Subscribe a service to a related topic
 func (eb *EventBus) Subscribe(eventType string) <-chan domain.Event {
 	eb.mu.Lock()
 	defer eb.mu.Unlock()
@@ -44,6 +59,7 @@ func (eb *EventBus) Subscribe(eventType string) <-chan domain.Event {
 	return ch
 }
 
+// Publish a message to a given topic to all subscribers.
 func (eb *EventBus) Publish(ctx context.Context, event domain.Event) error {
 	subs := eb.getSubscribers(event.GetType())
 

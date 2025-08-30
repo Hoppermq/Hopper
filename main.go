@@ -4,28 +4,28 @@ import (
 	"context"
 	"log/slog"
 	"net"
+	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin" // should not exist here
+
 	"github.com/hoppermq/hopper/internal/events"
-	"github.com/hoppermq/hopper/internal/http"
+	httpService "github.com/hoppermq/hopper/internal/http"
 
 	"github.com/zixyos/glog"
 
 	"github.com/hoppermq/hopper/internal/application"
 	"github.com/hoppermq/hopper/internal/config"
 	"github.com/hoppermq/hopper/internal/mq"
+	"github.com/hoppermq/hopper/internal/mq/core"
 	handler "github.com/hoppermq/hopper/internal/mq/transport/tcp"
 )
 
-const appName = "Hopper"
+const (
+	appName = "Hopper"
+	maxBufferSize  = 1024
+)
 
 func main() {
-	ctx := context.Background()
-	cfg, err := config.New(appName)
-	if err != nil {
-		panic(err)
-	}
-
 	logger, err := glog.New(
 		glog.WithLevel(slog.LevelDebug),
 		glog.WithFormat(glog.TextFormatter),
@@ -36,41 +36,57 @@ func main() {
 		),
 	)
 	if err != nil {
-		panic(err)
+		slog.New(slog.NewJSONHandler(os.Stdout, nil)).Error("Failed to create logger", "error", err)
+		os.Exit(1)
 	}
 
+	ctx := context.Background()
+	cfg, err := config.New(appName)
+	if err != nil {
+		logger.Warn("failed to load config", "error", err)
+	}
+
+	logger.Info("welcome to " + appName)
+
+	eventBus := events.NewEventBus(maxBufferSize)
+	// TODO : HOP-000 should use app config directly
 	conf := &net.ListenConfig{}
-
-	eb := events.NewEventBus(1000) // should load from config
-
-	tcpHandler, err := handler.NewTCP(
-		handler.WithContext(ctx),
-		handler.WithListener(*conf),
+	tcpTransport, err := handler.NewTCP(
+		ctx,
+		handler.WithListener(conf),
 		handler.WithLogger(logger),
 	)
-
 	if err != nil {
-		panic(err)
+		logger.Error("failed to create transport", "error", err)
+		os.Exit(1)
 	}
+
+	// TODO: HOP-000 should use composite pattern func.
+	broker := core.NewBroker(
+		logger,
+		eventBus,
+		tcpTransport,
+	)
 
 	hopperMQService := mq.New(
 		mq.WithLogger(logger),
-		mq.WithTCP(tcpHandler),
+		mq.WithBroker(broker),
+		mq.WithTransport(tcpTransport),
+		mq.WithEventBus(eventBus),
 	)
 
 	httpEngine := gin.New()
-
-	httpServer := http.NewHTTPServer(
-		http.WithLogger(logger),
-		http.WithEventBus(eb),
-		http.WithEngine(httpEngine),
+	httpServer := httpService.NewHTTPServer(
+		httpService.WithLogger(logger),
+		httpService.WithEngine(httpEngine),
 	)
 
-	logger.Info("Hey Welcome to HOPPER")
-	application.New(
+	app := application.New(
 		application.WithConfiguration(cfg),
 		application.WithLogger(logger),
-		application.WithEventBus(eb),
+		application.WithEventBus(eventBus),
 		application.WithService(hopperMQService, httpServer),
-	).Start()
+	)
+
+	app.Start()
 }

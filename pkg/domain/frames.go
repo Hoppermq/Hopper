@@ -7,6 +7,7 @@ type FrameType uint8
 // DOFF represents the Data Offset in the HopperMQ protocol.
 type DOFF uint8
 
+// Frame represent a frame used by the protocol.
 type Frame interface {
 	GetType() FrameType
 	GetHeader() HeaderFrame

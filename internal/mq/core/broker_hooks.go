@@ -32,8 +32,11 @@ func (b *Broker) onClientDisconnect(ctx context.Context, ch <-chan domain.Event)
 			if !ok {
 				return
 			}
+			// Handle both event types for backward compatibility
 			if c, ok := evt.(*events.ClientDisconnectEvent); ok {
 				b.handleConnectionClosed(ctx, c)
+			} else if c, ok := evt.(*events.ClientDisconnectedEvent); ok {
+				b.handleConnectionClosedByConn(ctx, c)
 			}
 		}
 	}
@@ -52,6 +55,7 @@ func (b *Broker) onReceivingMessage(ctx context.Context, ch <-chan domain.Event)
 				frame, err := b.Serializer.DeserializeFrame(c.Message)
 				if err != nil {
 					b.Logger.Warn("failed to deserialize the frame", "error", err)
+					continue
 				}
 
 				b.Logger.Info("new frame received", "frame_type", frame.GetType())

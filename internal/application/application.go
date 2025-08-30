@@ -13,12 +13,14 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
+const maxBuffer = 1000
+
 // Application is the application structure wrapper.
 type Application struct {
-	configuration config.Configuration
+	configuration *config.Configuration
 	logger        *slog.Logger
 
-	services []domain.Service
+	services []domain.IService
 	eb       domain.IEventBus
 	running  chan bool
 	stop     chan os.Signal
@@ -34,21 +36,24 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
-func WithService(services ...domain.Service) Option {
+// WithService register service to the main applications.
+func WithService(services ...domain.IService) Option {
 	return func(a *Application) {
 		a.services = append(a.services, services...)
 	}
 }
 
-func WithEventBus(eb domain.IEventBus) Option {
+// WithEventBus inject the event bus.
+func WithEventBus(eventBus domain.IEventBus) Option {
 	return func(a *Application) {
-		a.eb = eb
+		a.eb = eventBus
 	}
 }
 
+// WithConfiguration inject the configuration to the application.
 func WithConfiguration(cfg *config.Configuration) Option {
 	return func(a *Application) {
-		a.configuration = *cfg
+		a.configuration = cfg
 	}
 }
 
@@ -66,9 +71,10 @@ func New(opts ...Option) *Application {
 	return app
 }
 
+// Start will start all services registered to the application.
 func (a *Application) Start() {
 	a.logger.Info(
-		"Application STARTED",
+		"application started",
 		"name", a.configuration.App.Name,
 		"version", a.configuration.App.Version,
 		"id", a.configuration.App.ID,
@@ -77,13 +83,17 @@ func (a *Application) Start() {
 	signal.Notify(a.stop, syscall.SIGINT, syscall.SIGTERM)
 
 	for _, s := range a.services {
-		if eventBusAware, ok := s.(domain.EventBusAware); ok {
-			eventBusAware.RegisterEventBus(a.eb)
-		}
+		go func(svc domain.IService) {
+			svc.RegisterEventBus(a.eb)
 
-		go func(svc domain.Service) {
-			if err := s.Run(ctx); err != nil {
-				a.logger.Error("Failed to start component: ", s.Name(), err)
+			if err := svc.Run(ctx); err != nil {
+				a.logger.Error(
+					"failed to start component",
+					"component",
+					s.Name(),
+					"error",
+					err,
+				)
 				a.stop <- syscall.SIGTERM
 			}
 		}(s)
@@ -91,16 +101,35 @@ func (a *Application) Start() {
 	}
 
 	a.running <- true
+	a.Stop()
+	a.logger.Info("application shut down successfully")
+}
+
+// Stop shutdown gracefully all services ran by the application.
+func (a *Application) Stop() {
+	a.logger.Info(
+		"shutting down application",
+		"name",
+		a.getName(),
+		"application_id",
+		a.getID(),
+	)
 	<-a.stop
 
-	a.logger.Info("Shutting down application")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	for _, s := range a.services {
 		if err := s.Stop(shutdownCtx); err != nil {
-			a.logger.Error("Failed to stop service: ", s.Name(), err)
+			a.logger.Error("failed to stop service: ", s.Name(), err)
 		}
 	}
-	a.logger.Info("Application STOPPED")
+}
+
+func (a *Application) getName() string {
+	return a.configuration.App.Name
+}
+
+func (a *Application) getID() domain.ID {
+	return domain.ID(a.configuration.App.ID)
 }

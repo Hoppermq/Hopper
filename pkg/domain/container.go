@@ -4,21 +4,29 @@ package domain
 type ContainerState string
 
 const (
-	// CONTAINER_CREATED State represent the Container CONTAINER_CREATED Waiting for handshake process.
-	CONTAINER_CREATED ContainerState = "CONTAINER_CREATED"
-	// OPEN_SENT State represent the first phase of the handshake sending the OpenFrame to the client.
-	OPEN_SENT ContainerState = "OPEN_SENT"
-	// OPEN_RCVD State represent the confirmation of the received OpenFrame from the client.
-	OPEN_RCVD ContainerState = "OPEN_RCVD"
-	// CONNECTED State represent the validation and connection from the client to the broker and fully assigned to his container.
-	CONNECTED ContainerState = "CLIENT_CON"
-	// RESERVED State represent the state when a client shutdown and the container have no more clients reserve the container while clients are rebooting.
-	RESERVED ContainerState = "RSRVD"
+	// ContainerCreated State represent the Container ContainerCreated Waiting for handshake process.
+	ContainerCreated ContainerState = "ContainerCreated"
 
-	// IDLE State represent the state when no clients have been CONNECTED for a while so could be stole by a new one (overriding topics and all).
-	IDLE ContainerState = "IDLE"
+	// OpenSent State represent the first phase of the handshake sending the OpenFrame to the client.
+	OpenSent ContainerState = "OPEN_SENT"
+
+	// OpenRcvd State represent the confirmation of the received OpenFrame from the client.
+	OpenRcvd ContainerState = "OPEN_RCVD"
+
+	// Connected State represent the validation and connection from the client
+	// to the broker and fully assigned to his container.
+	Connected ContainerState = "CLIENT_CON"
+
+	// Reserved State represent the state when a client shutdown
+	// and the container have no more clients reserve the container while clients are rebooting.
+	Reserved ContainerState = "RSRVD"
+
+	// Idle State represent the state when no clients have been CONNECTED
+	// for a while so could be stolen by a new one (overriding topics and all).
+	Idle ContainerState = "IDLE"
 )
 
+// Container represent an hopper container.
 type Container interface {
 	CreateChannel(topic string, idGenerator func() ID) Channel
 	RemoveChannel(topic string)
@@ -26,5 +34,7 @@ type Container interface {
 	GetID() ID
 }
 
+// Channel represent the channel used by container.
 type Channel interface {
+	GetID() ID
 }

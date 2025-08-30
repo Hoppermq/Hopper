@@ -21,5 +21,8 @@ jobs:
       - name: Linting
         uses: Hoppermq/ci-kitchenette/golang/linter@master
 
+  build:
+    runs-on: ubuntu-latest
+    steps:
       - name: Builder
         uses: Hoppermq/ci-kitchenette/golang/build@master

@@ -6,24 +6,81 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
-type ContainerManager struct {
-	Container map[domain.ID]domain.Container
+// Registry represent the local registry for the orchestrator.
+type Registry struct {
+	mu sync.RWMutex
+
+	data map[string]map[domain.ID]struct{}
+}
+
+// Manager represent the container orchestrator.
+type Manager struct {
+	Registry Registry
 
 	mut sync.RWMutex
 }
 
-func NewContainerManager() *ContainerManager {
-	return &ContainerManager{
-		Container: make(map[domain.ID]domain.Container),
+// NewContainerRegistry return a new registry.
+func NewContainerRegistry() *Registry {
+	return &Registry{
+		data: make(map[string]map[domain.ID]struct{}),
 	}
 }
 
-func (ctnrManager *ContainerManager) CreateNewContainer(
-	IDGenerator func() domain.ID,
+// NewContainerManager return a new instance of the container orchestrator.
+func NewContainerManager() *Manager {
+	return &Manager{
+		Registry: *NewContainerRegistry(),
+	}
+}
+
+// CreateNewContainer create a new container.
+func (ctnrManager *Manager) CreateNewContainer(
+	idGenerator func() domain.ID,
 	clientID domain.ID,
 ) domain.Container {
-	container := NewContainer(IDGenerator(), clientID)
-	ctnrManager.Container[container.GetID()] = container
+	container := NewContainer(idGenerator(), clientID)
 
 	return container
+}
+
+// Register register attach a topic to a containerID.
+func (rContainer *Registry) Register(topic string, containerID domain.ID) {
+	rContainer.mu.Lock()
+	defer rContainer.mu.Unlock()
+
+	if rContainer.data[topic] == nil {
+		rContainer.data[topic] = make(map[domain.ID]struct{})
+	}
+
+	rContainer.data[topic][containerID] = struct{}{}
+}
+
+// Unregister remove a topic from a container.
+func (rContainer *Registry) Unregister(topic string, id domain.ID) {
+	rContainer.mu.Lock()
+	defer rContainer.mu.Unlock()
+
+	if set, ok := rContainer.data[topic]; ok {
+		delete(set, id)
+		if len(set) == 0 {
+			delete(rContainer.data, topic)
+		}
+	}
+}
+
+// RegisterContainerToTopic set a container to the registry attached to a topic.
+func (ctnrManager *Manager) RegisterContainerToTopic(
+	topic string,
+	containerID domain.ID,
+) {
+	ctnrManager.Registry.Register(topic, containerID)
+}
+
+// RemoveContainerFromTopic remove the container from the registry to it's given topic.
+func (ctnrManager *Manager) RemoveContainerFromTopic(
+	topic string,
+	containerID domain.ID,
+) {
+	ctnrManager.Registry.Unregister(topic, containerID)
 }

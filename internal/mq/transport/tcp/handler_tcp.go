@@ -2,8 +2,10 @@
 package tcp
 
 import (
+	"bufio"
 	"context"
 	"errors"
+	"io"
 	"log/slog"
 	"net"
 	"sync"
@@ -20,14 +22,12 @@ type TCP struct {
 
 	eb domain.IEventBus
 
-	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
 }
 
 type config struct {
-	lconf  net.ListenConfig
-	ctx    context.Context
+	lconf  *net.ListenConfig
 	logger *slog.Logger
 }
 
@@ -41,7 +41,7 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
-func WithListener(listenerConfig net.ListenConfig) Option {
+func WithListener(listenerConfig *net.ListenConfig) Option {
 	return func(c *config) error {
 		c.lconf = listenerConfig
 
@@ -49,16 +49,8 @@ func WithListener(listenerConfig net.ListenConfig) Option {
 	}
 }
 
-func WithContext(ctx context.Context) Option {
-	return func(c *config) error {
-		c.ctx = ctx
-
-		return nil
-	}
-}
-
 // NewTCP return the new tcp handler.
-func NewTCP(opts ...Option) (*TCP, error) {
+func NewTCP(ctx context.Context, opts ...Option) (*TCP, error) {
 	handlerConfig := &config{}
 	for _, opt := range opts {
 		err := opt(handlerConfig)
@@ -67,7 +59,7 @@ func NewTCP(opts ...Option) (*TCP, error) {
 		}
 	}
 
-	l, err := handlerConfig.lconf.Listen(handlerConfig.ctx, "tcp", ":9091")
+	l, err := handlerConfig.lconf.Listen(ctx, "tcp", ":9091")
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +107,7 @@ func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 		Conn:      conn,
 		Transport: domain.TransportTypeTCP,
 		BaseEvent: events.BaseEvent{
-			EventType: string(domain.EventTypeNewConnection),
+			EventType: domain.EventTypeNewConnection,
 		},
 	}
 
@@ -129,9 +121,9 @@ func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 		"publisher",
 		t.Name(),
 		"event",
-		evt.EventType,
+		evt.GetType(),
 		"transport",
-		evt.Transport,
+		evt.GetType(),
 	)
 
 	for {
@@ -139,14 +131,69 @@ func (t *TCP) processConnection(conn domain.Connection, ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
+			err := t.receiveMsg(conn, ctx)
+			if err != nil {
+				return
+			}
 		}
 	}
 }
 
+func (t *TCP) receiveMsg(conn domain.Connection, ctx context.Context) error {
+	reader := bufio.NewReader(conn)
+	if err := conn.SetReadDeadline(time.Now().Add(50 * time.Second)); err != nil {
+		t.logger.Warn("failed to set read deadline", "error", err)
+		return err
+	}
+
+	msg, err := reader.ReadBytes('\n')
+	if err != nil {
+		if err == io.EOF {
+			t.logger.Info("client disconnected from tcp")
+			evt := &events.ClientDisconnectedEvent{
+				Transport: domain.TransportTypeTCP,
+				Conn:      conn,
+				BaseEvent: events.BaseEvent{
+					EventType: domain.EventTypeConnectionClosed,
+				},
+			}
+
+			if err := t.eb.Publish(ctx, evt); err != nil {
+				t.logger.Warn("failed to publish client disconnected event", "error", err)
+				return err
+			}
+
+			return err
+		}
+	}
+
+	t.logger.Info("new message receive", "content", msg)
+	if t.eb == nil {
+		t.logger.Warn("EventBus not registered, skipping event publishing")
+		return err
+	}
+
+	evt := &events.MessageReceivedEvent{
+		Message:   msg,
+		Transport: domain.TransportTypeTCP,
+		BaseEvent: events.BaseEvent{
+			EventType: domain.EventTypeReceiveMessage,
+		},
+	}
+
+	if err := t.eb.Publish(ctx, evt); err != nil {
+		t.logger.Warn("failed to publish message event", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+// Run wil start the tcp component.
 func (t *TCP) Run(ctx context.Context) error {
 	t.logger.Info("starting TCP component")
 
-	t.ctx, t.cancel = context.WithCancel(ctx)
+	ctx, t.cancel = context.WithCancel(ctx)
 
 	msgSenderCh := t.eb.Subscribe(string(domain.EventTypeSendMessage))
 
@@ -156,7 +203,7 @@ func (t *TCP) Run(ctx context.Context) error {
 
 	go func() {
 		t.logger.Info("TCP server running", "port", 9091)
-		if err := t.HandleConnection(t.ctx); err != nil && !errors.Is(err, context.Canceled) {
+		if err := t.HandleConnection(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			t.logger.Warn("TCP Handler failed", "error", err)
 		}
 	}()
@@ -164,6 +211,7 @@ func (t *TCP) Run(ctx context.Context) error {
 	return nil
 }
 
+// Stop will shut down gracefully the tcp component.
 func (t *TCP) Stop(ctx context.Context) error {
 	t.logger.Info("stopping TCP Component")
 
@@ -191,10 +239,12 @@ func (t *TCP) Stop(ctx context.Context) error {
 	return nil
 }
 
+// Name will return the component name.
 func (t *TCP) Name() string {
 	return "tcp-handler"
 }
 
+// RegisterEventBus will attach the event bus to the component.
 func (t *TCP) RegisterEventBus(eb domain.IEventBus) {
 	t.eb = eb
 	t.logger.Info("EventBus registered with TCP", "service", t.Name())

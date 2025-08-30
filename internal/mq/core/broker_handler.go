@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 
+	"github.com/hoppermq/hopper/internal/common"
 	"github.com/hoppermq/hopper/internal/events"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
@@ -12,7 +13,7 @@ import (
 func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewConnectionEvent) {
 	client := b.cm.HandleNewClient(evt.Conn)
 	ctnr := b.containerManager.CreateNewContainer(
-		GenerateIdentifier,
+		common.GenerateIdentifier,
 		client.ID,
 	)
 	b.Logger.Info(
@@ -52,9 +53,9 @@ func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewC
 		ClientID:  client.ID,
 		Conn:      client.Conn,
 		Message:   data,
-		Transport: string(domain.TransportTypeTCP),
+		Transport: domain.TransportTypeTCP,
 		BaseEvent: events.BaseEvent{
-			EventType: string(domain.EventTypeSendMessage),
+			EventType: domain.EventTypeSendMessage,
 		},
 	}
 
@@ -65,4 +66,22 @@ func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewC
 
 func (b *Broker) handleConnectionClosed(ctx context.Context, evt *events.ClientDisconnectEvent) {
 	b.Logger.Info("client disconnected event", "client", evt.ClientID)
+
+	b.cm.RemoveClient(evt.ClientID)
+
+	// TODO: Implement container cleanup if needed
+}
+
+func (b *Broker) handleConnectionClosedByConn(ctx context.Context, evt *events.ClientDisconnectedEvent) {
+	client := b.cm.GetClientByConnection(evt.Conn)
+	if client == nil {
+		b.Logger.Warn("client not found for disconnected connection")
+		return
+	}
+
+	b.Logger.Info("client disconnected event", "client", client.ID)
+
+	b.cm.RemoveClient(client.ID)
+
+	// TODO: Implement container cleanup if needed
 }

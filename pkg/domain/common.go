@@ -1,7 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
+// ID represent the business type of identifier.
 type ID string
 
 // Serializable is an interface for serializable objects in the HopperMQ protocol.
@@ -10,6 +13,7 @@ type Serializable interface {
 	Deserialize(data []byte) (Serializable, error)
 }
 
+// Serializer is the interface for frame serialization.
 type Serializer interface {
 	SerializeFrame() ([]byte, error)
 	DeserializeFrame(data []byte) (Frame, error)
@@ -17,11 +21,13 @@ type Serializer interface {
 
 // Connection is an interface that use the same functions as net/Conn.
 type Connection interface {
-	Read([]byte) (int, error)
-	Write([]byte) (int, error)
+	Read(b []byte) (int, error)
+	Write(b []byte) (int, error)
 	Close() error
 
 	SetDeadline(t time.Time) error
 	SetReadDeadline(t time.Time) error
 	SetWriteDeadline(t time.Time) error
 }
+
+type Generator func() ID

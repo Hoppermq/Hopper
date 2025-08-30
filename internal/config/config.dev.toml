@@ -25,3 +25,6 @@ idle_timeout = "5m"           # Idle connection timeout
 read_timeout = "30s"
 write_timeout = "30s"
 read_header_timeout = "10s"
+
+[evetbus]
+max_buffer = 1000

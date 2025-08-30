@@ -1,3 +1,4 @@
+// Package container represent the business logic of a container.
 package container
 
 import (
@@ -22,8 +23,13 @@ type Channel struct {
 	RoutingKey string
 }
 
+// GetID returns the channel ID - implements domain.Channel interface.
+func (c *Channel) GetID() domain.ID {
+	return c.ID
+}
+
 // NewChannel create a new Channel.
-func NewChannel(generator func() domain.ID, topic string) domain.Channel {
+func NewChannel(generator func() domain.ID, topic string) *Channel {
 	return &Channel{
 		ID:         generator(),
 		Topic:      topic,
@@ -31,11 +37,12 @@ func NewChannel(generator func() domain.ID, topic string) domain.Channel {
 	}
 }
 
-func NewContainer(ID, clientID domain.ID) domain.Container {
+// NewContainer return a new container.
+func NewContainer(id, clientID domain.ID) domain.Container {
 	return &Container{
-		ID:              ID,
+		ID:              id,
 		ClientID:        clientID,
-		State:           domain.CONTAINER_CREATED,
+		State:           domain.ContainerCreated,
 		Channels:        make(map[domain.ID]domain.Channel),
 		ChannelsByTopic: make(map[string]domain.ID),
 	}
@@ -47,8 +54,8 @@ func (ctnr *Container) CreateChannel(
 	generateIdentifier func() domain.ID,
 ) domain.Channel {
 	channel := NewChannel(generateIdentifier, topic)
-	ctnr.Channels[domain.ID(channel.(*Channel).ID)] = channel
-	ctnr.ChannelsByTopic[topic] = channel.(*Channel).ID
+	ctnr.Channels[domain.ID(channel.ID)] = channel
+	ctnr.ChannelsByTopic[topic] = channel.ID
 
 	return channel
 }
@@ -56,13 +63,18 @@ func (ctnr *Container) CreateChannel(
 // RemoveChannel remove the channel from the container.
 func (ctnr *Container) RemoveChannel(topic string) {
 	chanToRemove := ctnr.findChannelByTopic(topic)
-	// TODO: should avoid type assertion here done it before jut look
-	delete(ctnr.Channels, chanToRemove.(*Channel).ID)
+	if chanToRemove != nil {
+		delete(ctnr.Channels, chanToRemove.GetID())
+		delete(ctnr.ChannelsByTopic, topic)
+	}
 }
 
 // TODO: Move to repository.
 func (ctnr *Container) findChannelByTopic(topic string) domain.Channel {
-	return ctnr.ChannelsByTopic[topic] // should add some validation here
+	if channelID, ok := ctnr.ChannelsByTopic[topic]; ok {
+		return ctnr.Channels[channelID]
+	}
+	return nil
 }
 
 // TODO: Move to repository.

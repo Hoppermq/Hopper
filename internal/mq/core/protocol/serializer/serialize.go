@@ -9,6 +9,7 @@ import (
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
+// Serializer represent the protocol serializer.
 type Serializer struct {
 	bufferPool domain.Pool[*bytes.Buffer] // since it's a global Serializer we will keep it as any atm.
 	mu         sync.RWMutex
@@ -126,6 +127,7 @@ func (ps *Serializer) writeConnectPayload(buff *bytes.Buffer, payload domain.Con
 	return ps.writeUint16(buff, payload.GetKeepAlive())
 }
 
+// SerializeFrame serialize the given frame.
 func (ps *Serializer) SerializeFrame(frame domain.Frame) ([]byte, error) {
 	buff := ps.bufferPool.Get()
 	defer ps.bufferPool.Put(buff)
@@ -145,6 +147,7 @@ func (ps *Serializer) SerializeFrame(frame domain.Frame) ([]byte, error) {
 	return res, nil
 }
 
+// DeserializeFrame deserialize the given bytes to frame.
 func (ps *Serializer) DeserializeFrame(d []byte) (domain.Frame, error) {
 	r := bytes.NewReader(d)
 
@@ -288,6 +291,7 @@ func (ps *Serializer) readID(r *bytes.Reader) (domain.ID, error) {
 	return domain.ID(str), nil
 }
 
+// NewSerializer return a new instance of serializer.
 func NewSerializer(pool domain.Pool[*bytes.Buffer]) *Serializer {
 	return &Serializer{
 		bufferPool: pool,

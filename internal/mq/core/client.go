@@ -9,27 +9,30 @@ import (
 
 // Client represents a single client connection to the broker.
 type Client struct {
-	ID   domain.ID
-	Conn domain.Connection
-	Mut  sync.Mutex
+	ID     domain.ID
+	Conn   domain.Connection
+	Mut    sync.Mutex
+	closed bool
 }
 
 // ClientManager is responsible for managing client connections to the broker.
 type ClientManager struct {
-	client map[domain.ID]*Client
-	mut    sync.RWMutex
+	client    map[domain.ID]*Client
+	generator domain.Generator
+	mut       sync.RWMutex
 }
 
-// NewClientManager creates a new ClientManager instance with the provided Broker.
-func NewClientManager(b *Broker) *ClientManager {
+// NewClientManager creates a new ClientManager instance with the provided generator.
+func NewClientManager(generator domain.Generator) *ClientManager {
 	return &ClientManager{
-		client: make(map[domain.ID]*Client),
+		client:    make(map[domain.ID]*Client),
+		generator: generator,
 	}
 }
 
-func createClient(conn domain.Connection) *Client {
+func (cm *ClientManager) createClient(conn domain.Connection) *Client {
 	return &Client{
-		ID:   GenerateIdentifier(),
+		ID:   cm.generator(),
 		Conn: conn,
 	}
 }
@@ -39,7 +42,7 @@ func (cm *ClientManager) HandleNewClient(conn domain.Connection) *Client {
 	cm.mut.Lock()
 	defer cm.mut.Unlock()
 
-	client := createClient(conn)
+	client := cm.createClient(conn)
 	cm.client[client.ID] = client
 
 	return client
@@ -51,10 +54,17 @@ func (cm *ClientManager) RemoveClient(clientID domain.ID) {
 	defer cm.mut.Unlock()
 
 	if client, exists := cm.client[clientID]; exists {
-		err := client.Conn.Close()
-		if err != nil {
-			return
+		client.Mut.Lock()
+		if !client.closed && client.Conn != nil {
+			err := client.Conn.Close()
+			if err != nil {
+				client.Mut.Unlock()
+				return
+			}
+			client.closed = true
 		}
+		client.Mut.Unlock()
+
 		delete(cm.client, clientID)
 		return
 	}
@@ -86,8 +96,15 @@ func (cm *ClientManager) Shutdown(ctx context.Context) error {
 	cm.mut.Lock()
 	defer cm.mut.Unlock()
 
-	for id := range cm.client {
-		cm.RemoveClient(id)
+	for id, client := range cm.client {
+		client.Mut.Lock()
+		if !client.closed && client.Conn != nil {
+			client.Conn.Close()
+			client.closed = true
+		}
+		client.Mut.Unlock()
+
+		delete(cm.client, id)
 	}
 
 	return nil

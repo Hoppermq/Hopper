@@ -1,70 +1,70 @@
+// Package mq is the message broker package.
 package mq
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"log/slog"
 	"sync"
 
 	"github.com/hoppermq/hopper/pkg/domain"
-
-	"github.com/hoppermq/hopper/internal/common"
-	"github.com/hoppermq/hopper/internal/mq/core"
-	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
-	handler "github.com/hoppermq/hopper/internal/mq/transport/tcp"
 )
 
+// HopperMQService represent the service orchestrator of the application.
 type HopperMQService struct {
 	eb domain.IEventBus
 
-	broker     *core.Broker
-	tcpHandler *handler.TCP
+	broker     domain.IService
+	tcpHandler domain.Transport
 
 	logger *slog.Logger
 
-	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
 }
 
+// Option represent the type options.
 type Option func(*HopperMQService)
 
+// WithLogger inject the logger.
 func WithLogger(logger *slog.Logger) Option {
 	return func(s *HopperMQService) {
 		s.logger = logger
 	}
 }
 
-func WithTCP(tcpHandler *handler.TCP) Option {
+// WithBroker inject broker service.
+func WithBroker(broker domain.IService) Option {
 	return func(s *HopperMQService) {
-		s.tcpHandler = tcpHandler
+		s.broker = broker
 	}
 }
 
-func WithBroker(hopperBroker *core.Broker) Option {
+// WithTransport inject transport layer.
+func WithTransport(transport domain.Transport) Option {
 	return func(s *HopperMQService) {
-		s.broker = hopperBroker
+		s.tcpHandler = transport
 	}
 }
 
+// WithEventBus inject event bus.
+func WithEventBus(eventBus domain.IEventBus) Option {
+	return func(s *HopperMQService) {
+		s.eb = eventBus
+	}
+}
+
+// New create a new Service orchestrator.
 func New(opts ...Option) *HopperMQService {
 	service := &HopperMQService{}
 	for _, opt := range opts {
 		opt(service)
 	}
 
-	serializer := serializer.NewSerializer(
-		common.NewPool(func() *bytes.Buffer {
-			return &bytes.Buffer{}
-		}),
-	)
-
-	service.broker = core.NewBroker(service.logger, serializer)
-
 	return service
 }
 
+// Name return the service name.
 func (h *HopperMQService) Name() string {
 	return "hopper-mq" // should be loaded from config.
 }
@@ -72,27 +72,38 @@ func (h *HopperMQService) Name() string {
 func (h *HopperMQService) startService(name string, runner func() error) {
 	h.logger.Info("Starting service", "service", name)
 	if err := runner(); err != nil && !errors.Is(err, context.Canceled) {
-		h.logger.Error("Service failed", "service", name, "error", err)
+		h.logger.Error("service failed to startup", "service", name, "error", err)
 
 		h.cancel()
 	}
 }
 
+// Run will start all components.
 func (h *HopperMQService) Run(ctx context.Context) error {
-	h.ctx, h.cancel = context.WithCancel(ctx) // should be init at the main prob
+	ctx, h.cancel = context.WithCancel(ctx) // should be init at the main prob
 	h.wg.Add(1)
+
+	if h.eb == nil {
+		h.logger.Warn("no service bus available")
+		return domain.ErrNoServiceAvailable
+	}
 
 	go h.startService("broker", func() error {
 		defer h.wg.Done()
-		return h.broker.Run(h.ctx, h.tcpHandler)
+		if err := h.broker.Run(ctx); err != nil {
+			h.logger.Warn("failed to run broker", "error", err)
+			return err
+		}
+		return nil
 	})
 
-	<-h.ctx.Done()
+	<-ctx.Done()
 	h.logger.Info("Service stopped", "service", h.Name())
 
 	return nil
 }
 
+// Stop will shut down gracefully all components.
 func (h *HopperMQService) Stop(ctx context.Context) error {
 	h.logger.Info("Stopping services")
 
@@ -100,25 +111,30 @@ func (h *HopperMQService) Stop(ctx context.Context) error {
 		h.cancel()
 	}
 
-	if err := h.tcpHandler.Stop(ctx); err != nil {
-		h.logger.Error("Failed to stop TCP HAndler")
+	if h.tcpHandler != nil {
+		if err := h.tcpHandler.Stop(ctx); err != nil {
+			h.logger.Error("Failed to stop TCP HAndler")
+		}
 	}
 
-	if err := h.broker.Stop(ctx); err != nil {
-		h.logger.Error("Failed to stop broker")
+	if h.broker != nil {
+		if err := h.broker.Stop(ctx); err != nil {
+			h.logger.Error("Failed to stop broker")
+		}
 	}
 
 	h.logger.Info("Services stopped")
 	return nil
 }
 
-func (h *HopperMQService) RegisterEventBus(eb domain.IEventBus) {
-	h.eb = eb
+// RegisterEventBus register the event bus to the services.
+func (h *HopperMQService) RegisterEventBus(bus domain.IEventBus) {
+	h.eb = bus
 
 	if h.broker != nil {
-		h.broker.RegisterEventBus(eb)
+		h.broker.RegisterEventBus(bus)
 	}
 	if h.tcpHandler != nil {
-		h.tcpHandler.RegisterEventBus(eb)
+		h.tcpHandler.RegisterEventBus(bus)
 	}
 }
