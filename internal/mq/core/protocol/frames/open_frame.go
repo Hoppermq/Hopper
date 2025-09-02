@@ -17,7 +17,11 @@ type OpenRcvdPayload struct {
 }
 
 // CreateOpenFramePayload creates a new OpenFramePayload instance.
-func CreateOpenFramePayload(header domain.HeaderPayload, sourceID domain.ID, assignedContainerID domain.ID) *OpenFramePayload {
+func CreateOpenFramePayload(
+	header domain.HeaderPayload,
+	sourceID domain.ID,
+	assignedContainerID domain.ID,
+) *OpenFramePayload {
 	return &OpenFramePayload{
 		BasePayload: BasePayload{
 			Header: header,

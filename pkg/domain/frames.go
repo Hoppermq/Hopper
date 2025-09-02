@@ -57,6 +57,7 @@ type Frame interface {
 	GetType() FrameType
 	GetHeader() HeaderFrame
 	GetPayload() Payload
+	CanHandle(frameType FrameType) bool
 }
 
 // HeaderFrame is the interface for all header frames in the HopperMQ protocol.
@@ -68,6 +69,7 @@ type HeaderFrame interface {
 	SetSize(uint16)
 }
 
+// HeaderPayload represent the domain interface of a frame payload header.
 type HeaderPayload interface {
 	Sizer() uint16
 }
@@ -135,16 +137,4 @@ type ErrorFramePayload interface {
 	GetErrorCode() uint16
 	GetErrorMessage() string
 	GetDetails() map[string]string
-}
-
-func (ft FrameType) IsControlFrame() bool {
-	return ft >= 0x01 && ft <= 0x0F
-}
-
-func (ft FrameType) IsMessageFrame() bool {
-	return ft >= 0x10 && ft <= 0x1F
-}
-
-func (ft FrameType) isErrorFrame() bool {
-	return ft >= 0xF0
 }
