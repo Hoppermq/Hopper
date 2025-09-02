@@ -38,7 +38,7 @@ func NewContainerManager() *Manager {
 func (ctnrManager *Manager) CreateNewContainer(
 	idGenerator func() domain.ID,
 	clientID domain.ID,
-) domain.Container {
+) *Container {
 	container := NewContainer(idGenerator(), clientID)
 
 	return container
