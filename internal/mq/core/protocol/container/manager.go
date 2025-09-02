@@ -15,7 +15,8 @@ type Registry struct {
 
 // Manager represent the container orchestrator.
 type Manager struct {
-	Registry Registry
+	Registry   *Registry
+	Containers map[domain.ID]*Container
 
 	mut sync.RWMutex
 }
@@ -30,7 +31,8 @@ func NewContainerRegistry() *Registry {
 // NewContainerManager return a new instance of the container orchestrator.
 func NewContainerManager() *Manager {
 	return &Manager{
-		Registry: *NewContainerRegistry(),
+		Registry:   NewContainerRegistry(),
+		Containers: make(map[domain.ID]*Container),
 	}
 }
 
@@ -40,6 +42,7 @@ func (ctnrManager *Manager) CreateNewContainer(
 	clientID domain.ID,
 ) *Container {
 	container := NewContainer(idGenerator(), clientID)
+	ctnrManager.Containers[container.ID] = container
 
 	return container
 }
@@ -84,3 +87,4 @@ func (ctnrManager *Manager) RemoveContainerFromTopic(
 ) {
 	ctnrManager.Registry.Unregister(topic, containerID)
 }
+

@@ -85,11 +85,17 @@ type OpenFramePayload interface {
 	GetAssignedContainerID() ID
 }
 
+type OpenRcvdFramePayload interface {
+	Payload
+	GetSourceID() ID
+}
+
 // MessageFramePayload is the interface for message frame payloads in the HopperMQ protocol.
 type MessageFramePayload interface {
 	Payload
 	GetTopic() string
 	GetMessageID() ID
+	GetSourceID() ID
 	GetContent() []byte
 	GetHeaders() map[string]string
 }

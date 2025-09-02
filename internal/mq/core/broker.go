@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/hoppermq/hopper/internal/common"
+	"github.com/hoppermq/hopper/internal/mq/core/client"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
@@ -25,7 +26,7 @@ type Broker struct {
 	eb domain.IEventBus
 	fm domain.FrameManager
 
-	clientManager    *ClientManager
+	clientManager    *client.Manager
 	containerManager *container.Manager
 
 	wg     sync.WaitGroup
@@ -51,7 +52,7 @@ func NewBroker(
 		fm:         &frames.FrameManager{},
 	}
 
-	broker.clientManager = NewClientManager(common.GenerateIdentifier) // should be created from the main
+	broker.clientManager = client.NewManager(common.GenerateIdentifier) // should be created from the main
 	broker.containerManager = container.NewContainerManager()
 	broker.transports = append(broker.transports, transports...)
 

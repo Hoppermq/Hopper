@@ -1,4 +1,4 @@
-package core
+package client
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func TestNewClientManager(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := NewClientManager(common.GenerateIdentifier)
+			got := NewManager(common.GenerateIdentifier)
 			assert.Equal(t, tt.want, got != nil)
 		})
 	}
@@ -58,7 +58,7 @@ func TestClientManager_CreateNewClient(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			cm := NewClientManager(common.GenerateIdentifier)
+			cm := NewManager(common.GenerateIdentifier)
 			got := cm.createClient(tt.args.conn)
 			assert.Equal(t, tt.want, got != nil)
 		})
@@ -102,7 +102,7 @@ func TestClientManager_ClientHandling(t *testing.T) {
 			mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 			tt.args.setupMock(mockGen)
 
-			cm := NewClientManager(mockGen.Generator)
+			cm := NewManager(mockGen.Generator)
 			client := cm.HandleNewClient(tt.args.conn)
 
 			tt.wantIDCheck(t, client)
@@ -150,7 +150,7 @@ func TestClientManager_RemoveClient(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				conn := args.setupConnection()
 
 				client := cm.HandleNewClient(conn)
@@ -178,7 +178,7 @@ func TestClientManager_RemoveClient(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 
 				conn := args.setupConnection()
 				client := cm.HandleNewClient(conn)
@@ -206,7 +206,7 @@ func TestClientManager_RemoveClient(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				conn := args.setupConnection()
 
 				client := cm.HandleNewClient(conn)
@@ -258,7 +258,7 @@ func TestClientManager_GetClient(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				conn := args.setupConnection()
 
 				client := cm.HandleNewClient(conn)
@@ -287,7 +287,7 @@ func TestClientManager_GetClient(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				conn := args.setupConnection()
 
 				client := cm.HandleNewClient(conn)
@@ -312,7 +312,7 @@ func TestClientManager_GetClient(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 
 				retrievedClient := cm.GetClient(args.targetClientID)
 
@@ -359,7 +359,7 @@ func TestClientManager_GetClientByConnection(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				connections := args.setupConnections()
 				conn := connections[0]
 
@@ -388,7 +388,7 @@ func TestClientManager_GetClientByConnection(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				connections := args.setupConnections()
 				conn1, conn2 := connections[0], connections[1]
 
@@ -413,7 +413,7 @@ func TestClientManager_GetClientByConnection(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				connections := args.setupConnections()
 
 				// Try to get client from empty manager
@@ -473,7 +473,7 @@ func TestClientManager_Shutdown(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				connections := args.setupConnections()
 
 				// Create multiple clients
@@ -508,7 +508,7 @@ func TestClientManager_Shutdown(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 
 				// Shutdown empty manager
 				err := cm.Shutdown(context.Background())
@@ -541,7 +541,7 @@ func TestClientManager_Shutdown(t *testing.T) {
 				args := value.(args)
 				mockGen := mocks_generator.NewMockGenerator(common.GenerateIdentifier)
 				args.setupMock(mockGen)
-				cm := NewClientManager(mockGen.Generator)
+				cm := NewManager(mockGen.Generator)
 				connections := args.setupConnections()
 
 				// Create clients

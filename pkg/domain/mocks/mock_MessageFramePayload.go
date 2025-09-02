@@ -28,6 +28,11 @@ type MockMessageFramePayload struct {
 	mock.Mock
 }
 
+func (m *MockMessageFramePayload) GetSourceID() domain.ID {
+	//TODO implement me
+	panic("implement me")
+}
+
 type MockMessageFramePayload_Expecter struct {
 	mock *mock.Mock
 }

@@ -80,3 +80,34 @@ func (b *Broker) handleConnectionClosedByConn(ctx context.Context, evt *events.C
 
 	b.clientManager.RemoveClient(client.ID)
 }
+
+func (b *Broker) RouteControlFrames(frame domain.Frame) {
+	frameType := frame.GetType()
+	switch frameType {
+	case domain.FrameTypeOpenRcvd:
+		sourceID := frame.GetPayload().(*frames.OpenFramePayload).GetSourceID()
+		containerID := b.clientManager.GetClient(sourceID).GetContainer()
+
+		if _, ok := b.containerManager.Containers[containerID]; ok {
+			b.Logger.Info("creating new channel for container", "container_id", containerID)
+		}
+	}
+}
+
+// RouteMessageFrames should route message to the containers.
+func (b *Broker) RouteMessageFrames(frame domain.Frame) {
+	framePayload := frame.GetPayload().(*frames.MessageFramePayload)
+	containers := b.containerManager.FindContainersByTopic(
+		framePayload.GetTopic(),
+	)
+	for _, container := range containers {
+		container.CreateChannel(
+			framePayload.GetTopic(),
+			common.GenerateIdentifier,
+		)
+
+		// channel processing here
+	}
+}
+
+func (b *Broker) RouteErrorFrames(frame domain.Frame) {}

@@ -25,4 +25,5 @@ type FrameManager interface {
 type Client interface {
 	GetID() ID
 	GetConnection() Connection
+	AttachContainer(containerID ID)
 }
