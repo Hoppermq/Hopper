@@ -14,15 +14,15 @@ func (ctr *Container) findChannelByID(id domain.ID) domain.Channel {
 }
 
 // FindContainersByTopic return all container attached to a topic as subscriber.
-func (cm *Manager) FindContainersByTopic(topic string) []Container {
-	cm.Registry.mu.RLock()
-	defer cm.Registry.mu.RUnlock()
+func (mgr *Manager) FindContainersByTopic(topic string) []Container {
+	mgr.Registry.mu.RLock()
+	defer mgr.Registry.mu.RUnlock()
 
 	var containers []Container
 
-	containersID := cm.Registry.data[topic]
+	containersID := mgr.Registry.data[topic]
 	for containerID, _ := range containersID {
-		container := cm.Containers[containerID]
+		container := mgr.Containers[containerID]
 		if container != nil {
 			containers = append(containers, *container)
 		}

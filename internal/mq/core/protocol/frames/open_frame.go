@@ -66,4 +66,3 @@ func (o OpenRcvdPayload) Sizer() uint16 {
 func (o OpenRcvdPayload) GetSourceID() domain.ID {
 	return o.SourceID
 }
-
