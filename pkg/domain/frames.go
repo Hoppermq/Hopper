@@ -7,6 +7,51 @@ type FrameType uint8
 // DOFF represents the Data Offset in the HopperMQ protocol.
 type DOFF uint8
 
+const (
+	// DOFF2 is the Data Offset for 2 bytes.
+	DOFF2 DOFF = 2
+	// DOFF3 is the Data Offset for 3 bytes.
+	DOFF3 DOFF = 3
+	// DOFF4 is the Data Offset for 4 bytes.
+	DOFF4 DOFF = 4
+)
+
+const (
+	// FrameTypeOpen is the frame type for open frames.
+	FrameTypeOpen FrameType = 0x01
+
+	// FrameTypeOpenRcvd is the frame type for open received frames.
+	FrameTypeOpenRcvd FrameType = 0x02
+
+	// FrameTypeClose is the frame type for close frames.
+	FrameTypeClose FrameType = 0x03
+
+	// FrameTypeConnect is the frame type for connect frames.
+	FrameTypeConnect FrameType = 0x04
+
+	// FrameTypeSubscribe is the frame type for subscribe frames.
+	FrameTypeSubscribe FrameType = 0x05
+
+	// FrameTypeUnsubscribe is the frame type for unsubscribe frames.
+	FrameTypeUnsubscribe FrameType = 0x06
+
+	// FrameTypeAuth represent the frame type for authentification.
+	FrameTypeAuth FrameType = 0x07
+
+	// FrameTypeBegin represent the frame type for begin a connection.
+	FrameTypeBegin FrameType = 0x08
+
+	// FrameTypeStart represent the frame type for starting the message flow.
+	FrameTypeStart FrameType = 0x0A
+
+	// FrameTypeMessage represent the frame type for a message.
+	FrameTypeMessage FrameType = 0x1F
+
+	// FrameTypeError is the frame type for error frames.
+	FrameTypeError FrameType = 0xF0
+)
+
+
 // Frame represent a frame used by the protocol.
 type Frame interface {
 	GetType() FrameType
@@ -86,37 +131,14 @@ type ErrorFramePayload interface {
 	GetDetails() map[string]string
 }
 
-const (
-	// DOFF2 is the Data Offset for 2 bytes.
-	DOFF2 DOFF = 2
-	// DOFF3 is the Data Offset for 3 bytes.
-	DOFF3 DOFF = 3
-	// DOFF4 is the Data Offset for 4 bytes.
-	DOFF4 DOFF = 4
-)
+func (ft FrameType) IsControlFrame() bool {
+	return ft >= 0x01 && ft <= 0x0F
+}
 
-const (
-	// FrameTypeOpen is the frame type for open frames.
-	FrameTypeOpen FrameType = 0x01
+func (ft FrameType) IsMessageFrame() bool {
+	return ft >= 0x10 && ft <= 0x1F
+}
 
-	// FrameTypeOpenRcvd is the frame type for open received frames.
-	FrameTypeOpenRcvd FrameType = 0x02
-
-	// FrameTypeClose is the frame type for close frames.
-	FrameTypeClose FrameType = 0x03
-
-	// FrameTypeMessage is the frame type for message frames.
-	FrameTypeMessage FrameType = 0x04
-
-	// FrameTypeConnect is the frame type for connect frames.
-	FrameTypeConnect FrameType = 0x05
-
-	// FrameTypeSubscribe is the frame type for subscribe frames.
-	FrameTypeSubscribe FrameType = 0x06
-
-	// FrameTypeUnsubscribe is the frame type for unsubscribe frames.
-	FrameTypeUnsubscribe FrameType = 0x07
-
-	// FrameTypeError is the frame type for error frames.
-	FrameTypeError FrameType = 0xF0
-)
+func (ft FrameType) isErrorFrame() bool {
+	return ft >= 0xF0
+}

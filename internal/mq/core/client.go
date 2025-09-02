@@ -22,6 +22,14 @@ type ClientManager struct {
 	mut       sync.RWMutex
 }
 
+func (c *Client) GetID() domain.ID {
+	return c.ID
+}
+
+func (c *Client) GetConn() domain.Connection {
+	return c.Conn
+}
+
 // NewClientManager creates a new ClientManager instance with the provided generator.
 func NewClientManager(generator domain.Generator) *ClientManager {
 	return &ClientManager{
@@ -99,7 +107,10 @@ func (cm *ClientManager) Shutdown(ctx context.Context) error {
 	for id, client := range cm.client {
 		client.Mut.Lock()
 		if !client.closed && client.Conn != nil {
-			client.Conn.Close()
+			if err := client.Conn.Close(); err != nil {
+				return err
+			}
+
 			client.closed = true
 		}
 		client.Mut.Unlock()
