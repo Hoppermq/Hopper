@@ -8,7 +8,9 @@ import (
 	"sync"
 
 	"github.com/hoppermq/hopper/internal/common"
+	"github.com/hoppermq/hopper/internal/mq/core/client"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/container"
+	"github.com/hoppermq/hopper/internal/mq/core/protocol/frames"
 	"github.com/hoppermq/hopper/internal/mq/core/protocol/serializer"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
@@ -21,8 +23,10 @@ type Broker struct {
 	transports []domain.Transport
 	Serializer *serializer.Serializer // should create a domain type here
 
-	eb               domain.IEventBus
-	cm               *ClientManager
+	eb domain.IEventBus
+	fm domain.FrameManager
+
+	clientManager    *client.Manager
 	containerManager *container.Manager
 
 	wg     sync.WaitGroup
@@ -45,9 +49,10 @@ func NewBroker(
 		Logger:     logger,
 		Serializer: newSerializer,
 		eb:         eb,
+		fm:         &frames.FrameManager{},
 	}
 
-	broker.cm = NewClientManager(common.GenerateIdentifier) // should be created from the main
+	broker.clientManager = client.NewManager(common.GenerateIdentifier) // should be created from the main
 	broker.containerManager = container.NewContainerManager()
 	broker.transports = append(broker.transports, transports...)
 
@@ -104,8 +109,8 @@ func (b *Broker) Stop(ctx context.Context) error {
 		b.cancel()
 	}
 
-	if b.cm != nil {
-		if err := b.cm.Shutdown(ctx); err != nil {
+	if b.clientManager != nil {
+		if err := b.clientManager.Shutdown(ctx); err != nil {
 			b.Logger.Error("failed to shutdown client manager", "error", err)
 		} else {
 			b.Logger.Info("Client manager shutdown successfully")

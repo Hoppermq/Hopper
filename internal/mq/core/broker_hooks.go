@@ -59,6 +59,16 @@ func (b *Broker) onReceivingMessage(ctx context.Context, ch <-chan domain.Event)
 				}
 
 				b.Logger.Info("new frame received", "frame_type", frame.GetType())
+				frameType := frame.GetType()
+				switch {
+				case b.fm.IsMessageFrame(frameType):
+					b.Logger.Info("message frame received", "frame_type", frameType)
+				case b.fm.IsControlFrame(frameType):
+					b.Logger.Info("control frame received", "frame_type", frameType)
+					b.RouteControlFrames(frame)
+				case b.fm.IsErrorFrame(frameType):
+					b.Logger.Info("error frame received", "frame_type", frameType)
+				}
 			}
 		}
 	}

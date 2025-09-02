@@ -10,7 +10,7 @@ import (
 )
 
 func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewConnectionEvent) {
-	client := b.cm.HandleNewClient(evt.Conn)
+	client := b.clientManager.HandleNewClient(evt.Conn)
 	ctr := b.containerManager.CreateNewContainer(
 		common.GenerateIdentifier,
 		client.ID,
@@ -66,11 +66,11 @@ func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewC
 func (b *Broker) handleConnectionClosed(ctx context.Context, evt *events.ClientDisconnectEvent) {
 	b.Logger.Info("client disconnected event", "client", evt.ClientID)
 
-	b.cm.RemoveClient(evt.ClientID)
+	b.clientManager.RemoveClient(evt.ClientID)
 }
 
 func (b *Broker) handleConnectionClosedByConn(ctx context.Context, evt *events.ClientDisconnectedEvent) {
-	client := b.cm.GetClientByConnection(evt.Conn)
+	client := b.clientManager.GetClientByConnection(evt.Conn)
 	if client == nil {
 		b.Logger.Warn("client not found for disconnected connection")
 		return
@@ -78,5 +78,36 @@ func (b *Broker) handleConnectionClosedByConn(ctx context.Context, evt *events.C
 
 	b.Logger.Info("client disconnected event", "client", client.ID)
 
-	b.cm.RemoveClient(client.ID)
+	b.clientManager.RemoveClient(client.ID)
 }
+
+func (b *Broker) RouteControlFrames(frame domain.Frame) {
+	frameType := frame.GetType()
+	switch frameType {
+	case domain.FrameTypeOpenRcvd:
+		sourceID := frame.GetPayload().(*frames.OpenFramePayload).GetSourceID()
+		containerID := b.clientManager.GetClient(sourceID).GetContainer()
+
+		if _, ok := b.containerManager.Containers[containerID]; ok {
+			b.Logger.Info("creating new channel for container", "container_id", containerID)
+		}
+	}
+}
+
+// RouteMessageFrames should route message to the containers.
+func (b *Broker) RouteMessageFrames(frame domain.Frame) {
+	framePayload := frame.GetPayload().(*frames.MessageFramePayload)
+	containers := b.containerManager.FindContainersByTopic(
+		framePayload.GetTopic(),
+	)
+	for _, container := range containers {
+		container.CreateChannel(
+			framePayload.GetTopic(),
+			common.GenerateIdentifier,
+		)
+
+		// channel processing here
+	}
+}
+
+func (b *Broker) RouteErrorFrames(frame domain.Frame) {}
