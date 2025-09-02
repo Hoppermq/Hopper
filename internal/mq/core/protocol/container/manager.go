@@ -15,7 +15,8 @@ type Registry struct {
 
 // Manager represent the container orchestrator.
 type Manager struct {
-	Registry Registry
+	Registry   *Registry
+	Containers map[domain.ID]*Container
 
 	mut sync.RWMutex
 }
@@ -30,16 +31,18 @@ func NewContainerRegistry() *Registry {
 // NewContainerManager return a new instance of the container orchestrator.
 func NewContainerManager() *Manager {
 	return &Manager{
-		Registry: *NewContainerRegistry(),
+		Registry:   NewContainerRegistry(),
+		Containers: make(map[domain.ID]*Container),
 	}
 }
 
 // CreateNewContainer create a new container.
-func (ctnrManager *Manager) CreateNewContainer(
+func (mgr *Manager) CreateNewContainer(
 	idGenerator func() domain.ID,
 	clientID domain.ID,
-) domain.Container {
+) *Container {
 	container := NewContainer(idGenerator(), clientID)
+	mgr.Containers[container.ID] = container
 
 	return container
 }
@@ -70,17 +73,18 @@ func (rContainer *Registry) Unregister(topic string, id domain.ID) {
 }
 
 // RegisterContainerToTopic set a container to the registry attached to a topic.
-func (ctnrManager *Manager) RegisterContainerToTopic(
+func (mgr *Manager) RegisterContainerToTopic(
 	topic string,
 	containerID domain.ID,
 ) {
-	ctnrManager.Registry.Register(topic, containerID)
+	mgr.Registry.Register(topic, containerID)
 }
 
 // RemoveContainerFromTopic remove the container from the registry to it's given topic.
-func (ctnrManager *Manager) RemoveContainerFromTopic(
+func (mgr *Manager) RemoveContainerFromTopic(
 	topic string,
 	containerID domain.ID,
 ) {
-	ctnrManager.Registry.Unregister(topic, containerID)
+	mgr.Registry.Unregister(topic, containerID)
 }
+

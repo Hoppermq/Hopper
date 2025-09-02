@@ -1,14 +1,21 @@
 package frames
 
-import "github.com/hoppermq/hopper/pkg/domain"
+import (
+	"github.com/hoppermq/hopper/pkg/domain"
+)
 
 // MessageFramePayload represents the payload for message frames in the HopperMQ protocol.
 type MessageFramePayload struct {
 	BasePayload
 	Topic     string
+	SourceID  domain.ID
 	MessageID domain.ID
 	Content   []byte
 	Headers   map[string]string
+}
+
+func (mfp *MessageFramePayload) GetSourceID() domain.ID {
+	return mfp.SourceID
 }
 
 // GetTopic returns the topic from the message frame payload.

@@ -5,7 +5,11 @@ import (
 )
 
 // CreateOpenFrame create a new open frame.
-func CreateOpenFrame(doff domain.DOFF, sourceID domain.ID, assignedContainerID domain.ID) (domain.Frame, error) {
+func CreateOpenFrame(
+	doff domain.DOFF,
+	sourceID domain.ID,
+	assignedContainerID domain.ID,
+) (*Frame, error) {
 	headerFrame := Header{
 		Size: 0,
 		DOFF: doff,
@@ -28,7 +32,7 @@ func CreateMessageFrame(
 	messageID domain.ID,
 	content []byte,
 	headers map[string]string,
-) (domain.Frame, error) {
+) (*Frame, error) {
 	headerFrame := Header{
 		Size: 0,
 		DOFF: doff,
@@ -42,4 +46,9 @@ func CreateMessageFrame(
 	payload := CreateMessageFramePayload(payloadHeader, topic, messageID, content, headers)
 
 	return CreateFrame(&headerFrame, nil, payload)
+}
+
+// CanHandle return if frame match the frame type ?.
+func (f *Frame) CanHandle(frameType domain.FrameType) bool {
+	return f.GetType() == frameType
 }
