@@ -5,7 +5,7 @@ type ContainerState string
 
 const (
 	// ContainerCreated State represent the Container ContainerCreated Waiting for handshake process.
-	ContainerCreated ContainerState = "ContainerCreated"
+	ContainerCreated ContainerState = "CONTAINER_CREATED"
 
 	// OpenSent State represent the first phase of the handshake sending the OpenFrame to the client.
 	OpenSent ContainerState = "OPEN_SENT"
@@ -28,7 +28,7 @@ const (
 
 // Container represent an hopper container.
 type Container interface {
-	CreateChannel(topic string, idGenerator func() ID) Channel
+	CreateChannel(topic string, generateIdentifier func() ID) *Channel
 	RemoveChannel(topic string)
 	SetState(state ContainerState)
 	GetID() ID

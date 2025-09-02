@@ -12,6 +12,7 @@ type Frame interface {
 	GetType() FrameType
 	GetHeader() HeaderFrame
 	GetPayload() Payload
+	CanHandle(frameType FrameType) bool
 }
 
 // HeaderFrame is the interface for all header frames in the HopperMQ protocol.
@@ -23,6 +24,7 @@ type HeaderFrame interface {
 	SetSize(uint16)
 }
 
+// HeaderPayload represent the domain interface of a frame payload header.
 type HeaderPayload interface {
 	Sizer() uint16
 }

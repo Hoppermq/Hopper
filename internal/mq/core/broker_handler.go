@@ -80,3 +80,13 @@ func (b *Broker) handleConnectionClosedByConn(ctx context.Context, evt *events.C
 
 	b.cm.RemoveClient(client.ID)
 }
+
+func (b *Broker) handleReceivedFrame(ctx context.Context, f domain.Frame) {
+	switch f.GetType() {
+	case domain.FrameTypeOpenRcvd:
+		b.Logger.Info("received open rcvd frame")
+	case domain.FrameTypeSubscribe:
+		b.Logger.Info("received subscribe frame")
+	default:
+	}
+}

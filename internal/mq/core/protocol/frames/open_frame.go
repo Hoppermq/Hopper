@@ -11,6 +11,7 @@ type OpenFramePayload struct {
 	AssignedContainerID domain.ID
 }
 
+
 // GetSourceID returns the source ID from the open frame payload.
 func (ofp *OpenFramePayload) GetSourceID() domain.ID {
 	return ofp.SourceID
@@ -28,13 +29,26 @@ func (ofp *OpenFramePayload) Sizer() uint16 {
 		headerSize = ofp.Header.Sizer()
 	}
 
-	// Calculate size of IDs (assuming they serialize to known sizes)
 	dataSize := uint16(len(ofp.SourceID) + len(ofp.AssignedContainerID))
 	return headerSize + dataSize
 }
 
+func (o OpenRcvdFramePayload) Sizer() uint16 {
+	headerSize := uint16(0)
+	if o.Header != nil {
+		headerSize = o.Header.Sizer()
+	}
+
+	dataSize := uint16(len(o.SourceID))
+	return headerSize + dataSize
+}
+
 // CreateOpenFramePayload creates a new OpenFramePayload instance.
-func CreateOpenFramePayload(header domain.HeaderPayload, sourceID domain.ID, assignedContainerID domain.ID) *OpenFramePayload {
+func CreateOpenFramePayload(
+	header domain.HeaderPayload,
+	sourceID domain.ID,
+	assignedContainerID domain.ID,
+) *OpenFramePayload {
 	return &OpenFramePayload{
 		BasePayload: BasePayload{
 			Header: header,
