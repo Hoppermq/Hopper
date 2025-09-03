@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin" // should not exist here
+	"github.com/hoppermq/hopper/internal/ui"
 
 	"github.com/hoppermq/hopper/internal/events"
 	httpService "github.com/hoppermq/hopper/internal/http"
@@ -21,8 +22,8 @@ import (
 )
 
 const (
-	appName = "Hopper"
-	maxBufferSize  = 1024
+	appName       = "Hopper"
+	maxBufferSize = 1024
 )
 
 func main() {
@@ -81,11 +82,17 @@ func main() {
 		httpService.WithEngine(httpEngine),
 	)
 
+	uiEngine := gin.New()
+	uiService := ui.NewHTTPServer(
+		ui.WithLogger(logger),
+		ui.WithEngine(uiEngine),
+	)
+
 	app := application.New(
 		application.WithConfiguration(cfg),
 		application.WithLogger(logger),
 		application.WithEventBus(eventBus),
-		application.WithService(hopperMQService, httpServer),
+		application.WithService(hopperMQService, httpServer, uiService),
 	)
 
 	app.Start()

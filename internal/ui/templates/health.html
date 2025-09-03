@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Health Check</title>
+  <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+</head>
+<body>
+  <h1>Health Check</h1>
+
+<div hx-sse="connect:/ping">
+  <div hx-sse="swap:ping" id="ping-result">
+    Waiting for pong...
+  </div>
+</div>
+</body>
+</html>
