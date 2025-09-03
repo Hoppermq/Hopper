@@ -7,10 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func DashboardHandler() gin.HandlerFunc {
+func LoginHandler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
-		tmpl, err := template.ParseFiles("internal/ui/templates/dashboard.html")
+		tmpl, err := template.ParseFiles("internal/ui/templates/login.html")
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -18,8 +17,9 @@ func DashboardHandler() gin.HandlerFunc {
 
 		err = tmpl.Execute(ctx.Writer, nil)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error executing template"})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 	}
 }
+

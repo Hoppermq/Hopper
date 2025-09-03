@@ -80,7 +80,7 @@ func (h *HTTP) Run(ctx context.Context) error {
 	h.eb.Subscribe(string(domain.EventTypeSendMessage))
 
 	routes.RegisterBaseRoutes(h.engine)
-	if err := h.engine.Run(":8080"); err != nil {
+	if err := h.engine.Run(h.server.Addr); err != nil {
 		h.logger.Warn("http server stopped", "error", err)
 	}
 

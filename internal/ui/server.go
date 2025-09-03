@@ -48,7 +48,9 @@ func NewHTTPServer(opts ...Option) *HTTPServer {
 // Run start the ui http server.
 func (s *HTTPServer) Run(ctx context.Context) error {
 	routes.RegisterBaseRoutes(s.engine)
-	if err := s.engine.Run(":8090"); err != nil && err != http.ErrServerClosed {
+	routes.RegisterRoutes(s.engine)
+
+	if err := s.engine.Run(s.server.Addr); err != nil && err != http.ErrServerClosed {
 		s.logger.Info("http server closed", "error", err)
 	}
 

@@ -9,3 +9,8 @@ import (
 func RegisterBaseRoutes(e *gin.Engine) {
 	e.GET("/", handlers.DashboardHandler())
 }
+
+func RegisterRoutes(e *gin.Engine) {
+	e.GET("/ping", handlers.Ping())
+	e.GET("/health", handlers.HealthHandler())
+}
