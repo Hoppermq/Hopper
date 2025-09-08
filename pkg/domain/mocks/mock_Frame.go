@@ -36,6 +36,57 @@ func (_m *MockFrame) EXPECT() *MockFrame_Expecter {
 	return &MockFrame_Expecter{mock: &_m.Mock}
 }
 
+// CanHandle provides a mock function for the type MockFrame
+func (_mock *MockFrame) CanHandle(frameType domain.FrameType) bool {
+	ret := _mock.Called(frameType)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CanHandle")
+	}
+
+	var r0 bool
+	if returnFunc, ok := ret.Get(0).(func(domain.FrameType) bool); ok {
+		r0 = returnFunc(frameType)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	return r0
+}
+
+// MockFrame_CanHandle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CanHandle'
+type MockFrame_CanHandle_Call struct {
+	*mock.Call
+}
+
+// CanHandle is a helper method to define mock.On call
+//   - frameType domain.FrameType
+func (_e *MockFrame_Expecter) CanHandle(frameType interface{}) *MockFrame_CanHandle_Call {
+	return &MockFrame_CanHandle_Call{Call: _e.mock.On("CanHandle", frameType)}
+}
+
+func (_c *MockFrame_CanHandle_Call) Run(run func(frameType domain.FrameType)) *MockFrame_CanHandle_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 domain.FrameType
+		if args[0] != nil {
+			arg0 = args[0].(domain.FrameType)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFrame_CanHandle_Call) Return(b bool) *MockFrame_CanHandle_Call {
+	_c.Call.Return(b)
+	return _c
+}
+
+func (_c *MockFrame_CanHandle_Call) RunAndReturn(run func(frameType domain.FrameType) bool) *MockFrame_CanHandle_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetHeader provides a mock function for the type MockFrame
 func (_mock *MockFrame) GetHeader() domain.HeaderFrame {
 	ret := _mock.Called()

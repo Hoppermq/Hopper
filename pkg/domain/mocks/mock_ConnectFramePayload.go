@@ -36,50 +36,6 @@ func (_m *MockConnectFramePayload) EXPECT() *MockConnectFramePayload_Expecter {
 	return &MockConnectFramePayload_Expecter{mock: &_m.Mock}
 }
 
-// GetClientID provides a mock function for the type MockConnectFramePayload
-func (_mock *MockConnectFramePayload) GetClientID() domain.ID {
-	ret := _mock.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetClientID")
-	}
-
-	var r0 domain.ID
-	if returnFunc, ok := ret.Get(0).(func() domain.ID); ok {
-		r0 = returnFunc()
-	} else {
-		r0 = ret.Get(0).(domain.ID)
-	}
-	return r0
-}
-
-// MockConnectFramePayload_GetClientID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetClientID'
-type MockConnectFramePayload_GetClientID_Call struct {
-	*mock.Call
-}
-
-// GetClientID is a helper method to define mock.On call
-func (_e *MockConnectFramePayload_Expecter) GetClientID() *MockConnectFramePayload_GetClientID_Call {
-	return &MockConnectFramePayload_GetClientID_Call{Call: _e.mock.On("GetClientID")}
-}
-
-func (_c *MockConnectFramePayload_GetClientID_Call) Run(run func()) *MockConnectFramePayload_GetClientID_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockConnectFramePayload_GetClientID_Call) Return(iD domain.ID) *MockConnectFramePayload_GetClientID_Call {
-	_c.Call.Return(iD)
-	return _c
-}
-
-func (_c *MockConnectFramePayload_GetClientID_Call) RunAndReturn(run func() domain.ID) *MockConnectFramePayload_GetClientID_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetClientVersion provides a mock function for the type MockConnectFramePayload
 func (_mock *MockConnectFramePayload) GetClientVersion() string {
 	ret := _mock.Called()
@@ -210,6 +166,50 @@ func (_c *MockConnectFramePayload_GetKeepAlive_Call) Return(v uint16) *MockConne
 }
 
 func (_c *MockConnectFramePayload_GetKeepAlive_Call) RunAndReturn(run func() uint16) *MockConnectFramePayload_GetKeepAlive_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetSourceID provides a mock function for the type MockConnectFramePayload
+func (_mock *MockConnectFramePayload) GetSourceID() domain.ID {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSourceID")
+	}
+
+	var r0 domain.ID
+	if returnFunc, ok := ret.Get(0).(func() domain.ID); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(domain.ID)
+	}
+	return r0
+}
+
+// MockConnectFramePayload_GetSourceID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSourceID'
+type MockConnectFramePayload_GetSourceID_Call struct {
+	*mock.Call
+}
+
+// GetSourceID is a helper method to define mock.On call
+func (_e *MockConnectFramePayload_Expecter) GetSourceID() *MockConnectFramePayload_GetSourceID_Call {
+	return &MockConnectFramePayload_GetSourceID_Call{Call: _e.mock.On("GetSourceID")}
+}
+
+func (_c *MockConnectFramePayload_GetSourceID_Call) Run(run func()) *MockConnectFramePayload_GetSourceID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockConnectFramePayload_GetSourceID_Call) Return(iD domain.ID) *MockConnectFramePayload_GetSourceID_Call {
+	_c.Call.Return(iD)
+	return _c
+}
+
+func (_c *MockConnectFramePayload_GetSourceID_Call) RunAndReturn(run func() domain.ID) *MockConnectFramePayload_GetSourceID_Call {
 	_c.Call.Return(run)
 	return _c
 }

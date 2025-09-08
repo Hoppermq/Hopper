@@ -118,7 +118,7 @@ func (ps *Serializer) writeMessagePayload(buff *bytes.Buffer, payload domain.Mes
 }
 
 func (ps *Serializer) writeConnectPayload(buff *bytes.Buffer, payload domain.ConnectFramePayload) error {
-	if err := ps.writeID(buff, payload.GetClientID()); err != nil {
+	if err := ps.writeID(buff, payload.GetSourceID()); err != nil {
 		return err
 	}
 	if err := ps.writeString(buff, payload.GetClientVersion()); err != nil {

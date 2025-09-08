@@ -37,19 +37,19 @@ func (_m *MockContainer) EXPECT() *MockContainer_Expecter {
 }
 
 // CreateChannel provides a mock function for the type MockContainer
-func (_mock *MockContainer) CreateChannel(topic string, idGenerator func() domain.ID) domain.Channel {
-	ret := _mock.Called(topic, idGenerator)
+func (_mock *MockContainer) CreateChannel(topic string, generateIdentifier func() domain.ID) *domain.Channel {
+	ret := _mock.Called(topic, generateIdentifier)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateChannel")
 	}
 
-	var r0 domain.Channel
-	if returnFunc, ok := ret.Get(0).(func(string, func() domain.ID) domain.Channel); ok {
-		r0 = returnFunc(topic, idGenerator)
+	var r0 *domain.Channel
+	if returnFunc, ok := ret.Get(0).(func(string, func() domain.ID) *domain.Channel); ok {
+		r0 = returnFunc(topic, generateIdentifier)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(domain.Channel)
+			r0 = ret.Get(0).(*domain.Channel)
 		}
 	}
 	return r0
@@ -62,12 +62,12 @@ type MockContainer_CreateChannel_Call struct {
 
 // CreateChannel is a helper method to define mock.On call
 //   - topic string
-//   - idGenerator func() domain.ID
-func (_e *MockContainer_Expecter) CreateChannel(topic interface{}, idGenerator interface{}) *MockContainer_CreateChannel_Call {
-	return &MockContainer_CreateChannel_Call{Call: _e.mock.On("CreateChannel", topic, idGenerator)}
+//   - generateIdentifier func() domain.ID
+func (_e *MockContainer_Expecter) CreateChannel(topic interface{}, generateIdentifier interface{}) *MockContainer_CreateChannel_Call {
+	return &MockContainer_CreateChannel_Call{Call: _e.mock.On("CreateChannel", topic, generateIdentifier)}
 }
 
-func (_c *MockContainer_CreateChannel_Call) Run(run func(topic string, idGenerator func() domain.ID)) *MockContainer_CreateChannel_Call {
+func (_c *MockContainer_CreateChannel_Call) Run(run func(topic string, generateIdentifier func() domain.ID)) *MockContainer_CreateChannel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -85,12 +85,12 @@ func (_c *MockContainer_CreateChannel_Call) Run(run func(topic string, idGenerat
 	return _c
 }
 
-func (_c *MockContainer_CreateChannel_Call) Return(channel domain.Channel) *MockContainer_CreateChannel_Call {
+func (_c *MockContainer_CreateChannel_Call) Return(channel *domain.Channel) *MockContainer_CreateChannel_Call {
 	_c.Call.Return(channel)
 	return _c
 }
 
-func (_c *MockContainer_CreateChannel_Call) RunAndReturn(run func(topic string, idGenerator func() domain.ID) domain.Channel) *MockContainer_CreateChannel_Call {
+func (_c *MockContainer_CreateChannel_Call) RunAndReturn(run func(topic string, generateIdentifier func() domain.ID) *domain.Channel) *MockContainer_CreateChannel_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -135,6 +135,50 @@ func (_c *MockContainer_GetID_Call) Return(iD domain.ID) *MockContainer_GetID_Ca
 }
 
 func (_c *MockContainer_GetID_Call) RunAndReturn(run func() domain.ID) *MockContainer_GetID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetState provides a mock function for the type MockContainer
+func (_mock *MockContainer) GetState() domain.ContainerState {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetState")
+	}
+
+	var r0 domain.ContainerState
+	if returnFunc, ok := ret.Get(0).(func() domain.ContainerState); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(domain.ContainerState)
+	}
+	return r0
+}
+
+// MockContainer_GetState_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetState'
+type MockContainer_GetState_Call struct {
+	*mock.Call
+}
+
+// GetState is a helper method to define mock.On call
+func (_e *MockContainer_Expecter) GetState() *MockContainer_GetState_Call {
+	return &MockContainer_GetState_Call{Call: _e.mock.On("GetState")}
+}
+
+func (_c *MockContainer_GetState_Call) Run(run func()) *MockContainer_GetState_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockContainer_GetState_Call) Return(containerState domain.ContainerState) *MockContainer_GetState_Call {
+	_c.Call.Return(containerState)
+	return _c
+}
+
+func (_c *MockContainer_GetState_Call) RunAndReturn(run func() domain.ContainerState) *MockContainer_GetState_Call {
 	_c.Call.Return(run)
 	return _c
 }

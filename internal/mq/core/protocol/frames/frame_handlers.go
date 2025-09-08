@@ -48,6 +48,39 @@ func CreateMessageFrame(
 	return CreateFrame(&headerFrame, nil, payload)
 }
 
+// CreateBeginFrame create a new begin frame.
+func CreateBeginFrame(
+	doff domain.DOFF,
+	sourceID domain.ID,
+	containerID domain.ID,
+	remoteChannel uint16,
+	nextOutgoingID uint32,
+	incomingWindow uint32,
+	outgoingWindow uint32,
+) (*Frame, error) {
+	headerFrame := Header{
+		Size: 0,
+		DOFF: doff,
+		Type: domain.FrameTypeBegin,
+	}
+
+	payloadHeader := &PayloadHeader{
+		Size: 0,
+	}
+
+	payload := CreateBeginFramePayload(
+		payloadHeader,
+		sourceID,
+		containerID,
+		remoteChannel,
+		nextOutgoingID,
+		incomingWindow,
+		outgoingWindow,
+	)
+
+	return CreateFrame(&headerFrame, nil, payload)
+}
+
 // CanHandle return if frame match the frame type ?.
 func (f *Frame) CanHandle(frameType domain.FrameType) bool {
 	return f.GetType() == frameType

@@ -69,7 +69,6 @@ func (ctr *Container) RemoveChannel(topic string) {
 	}
 }
 
-
 // SetState set the current container state.
 func (ctr *Container) SetState(state domain.ContainerState) {
 	ctr.State = state
@@ -78,4 +77,9 @@ func (ctr *Container) SetState(state domain.ContainerState) {
 // GetID return the containerID.
 func (ctr *Container) GetID() domain.ID {
 	return ctr.ID
+}
+
+// GetState return the current containerState.
+func (ctr *Container) GetState() domain.ContainerState {
+	return ctr.State
 }

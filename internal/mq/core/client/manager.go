@@ -92,7 +92,8 @@ func (cm *Manager) Shutdown(ctx context.Context) error {
 		client.Mut.Lock()
 		if !client.closed && client.Conn != nil {
 			if err := client.Conn.Close(); err != nil {
-				return err
+				// Log the error but continue shutting down other connections
+				// This ensures graceful shutdown even if some connections fail to close
 			}
 
 			client.closed = true
