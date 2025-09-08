@@ -60,7 +60,11 @@ func (b *Broker) handleNewClientConnection(ctx context.Context, evt *events.NewC
 
 	if err := b.eb.Publish(ctx, sendMsgEvt); err != nil {
 		b.Logger.Warn("failed to publish new message send event", "error", err)
+		return
 	}
+
+	b.containerManager.UpdateContainerState(ctr.ID, domain.ContainerOpenSent)
+
 }
 
 func (b *Broker) handleConnectionClosed(ctx context.Context, evt *events.ClientDisconnectEvent) {
@@ -87,10 +91,18 @@ func (b *Broker) RouteControlFrames(frame domain.Frame) {
 	case domain.FrameTypeOpenRcvd:
 		sourceID := frame.GetPayload().(*frames.OpenFramePayload).GetSourceID()
 		containerID := b.clientManager.GetClient(sourceID).GetContainer()
-
-		if _, ok := b.containerManager.Containers[containerID]; ok {
-			b.Logger.Info("creating new channel for container", "container_id", containerID)
+		ctr := b.containerManager.FindContainer(containerID)
+		if ctr == nil {
+			b.Logger.Warn("container not found", "container_id", containerID)
+			return
 		}
+
+		if ctr.GetState() != domain.ContainerOpenSent {
+			b.Logger.Warn("container is not open", "container_id", containerID)
+			return
+		}
+
+		b.containerManager.UpdateContainerState(containerID, domain.ContainerConnected)
 	}
 }
 

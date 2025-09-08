@@ -44,6 +44,7 @@ func (mgr *Manager) CreateNewContainer(
 	container := NewContainer(idGenerator(), clientID)
 	mgr.Containers[container.ID] = container
 
+	container.SetState(domain.ContainerCreated)
 	return container
 }
 

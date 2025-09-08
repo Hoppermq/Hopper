@@ -79,3 +79,8 @@ func (ctr *Container) SetState(state domain.ContainerState) {
 func (ctr *Container) GetID() domain.ID {
 	return ctr.ID
 }
+
+// GetState return the current containerState.
+func (ctr *Container) GetState() domain.ContainerState {
+	return ctr.State
+}
