@@ -71,6 +71,10 @@ func validateFrame(header domain.HeaderFrame, payload domain.Payload) error {
 		if _, ok := payload.(domain.ErrorFramePayload); !ok {
 			return domain.ErrInvalidPayload
 		}
+	case domain.FrameTypeBegin:
+		if _, ok := payload.(domain.BeginFramePayload); !ok {
+			return domain.ErrInvalidPayload
+		}
 	default:
 		return nil
 	}

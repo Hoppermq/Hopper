@@ -51,7 +51,6 @@ const (
 	FrameTypeError FrameType = 0xF0
 )
 
-
 // Frame represent a frame used by the protocol.
 type Frame interface {
 	GetType() FrameType
@@ -105,7 +104,7 @@ type MessageFramePayload interface {
 // ConnectFramePayload is the interface for connect frame payloads in the HopperMQ protocol.
 type ConnectFramePayload interface {
 	Payload
-	GetClientID() ID
+	GetSourceID() ID
 	GetClientVersion() string
 	GetKeepAlive() uint16
 }
@@ -137,4 +136,15 @@ type ErrorFramePayload interface {
 	GetErrorCode() uint16
 	GetErrorMessage() string
 	GetDetails() map[string]string
+}
+
+// BeginFramePayload is the interface for begin frame payloads in the HopperMQ protocol.
+type BeginFramePayload interface {
+	Payload
+	GetSourceID() ID
+	GetContainerID() ID
+	GetRemoteChannel() uint16
+	GetNextOutgoingID() uint32
+	GetIncomingWindow() uint32
+	GetOutgoingWindow() uint32
 }

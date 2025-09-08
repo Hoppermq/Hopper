@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	"github.com/hoppermq/hopper/pkg/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -33,4 +34,48 @@ type MockChannel_Expecter struct {
 
 func (_m *MockChannel) EXPECT() *MockChannel_Expecter {
 	return &MockChannel_Expecter{mock: &_m.Mock}
+}
+
+// GetID provides a mock function for the type MockChannel
+func (_mock *MockChannel) GetID() domain.ID {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetID")
+	}
+
+	var r0 domain.ID
+	if returnFunc, ok := ret.Get(0).(func() domain.ID); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(domain.ID)
+	}
+	return r0
+}
+
+// MockChannel_GetID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetID'
+type MockChannel_GetID_Call struct {
+	*mock.Call
+}
+
+// GetID is a helper method to define mock.On call
+func (_e *MockChannel_Expecter) GetID() *MockChannel_GetID_Call {
+	return &MockChannel_GetID_Call{Call: _e.mock.On("GetID")}
+}
+
+func (_c *MockChannel_GetID_Call) Run(run func()) *MockChannel_GetID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockChannel_GetID_Call) Return(iD domain.ID) *MockChannel_GetID_Call {
+	_c.Call.Return(iD)
+	return _c
+}
+
+func (_c *MockChannel_GetID_Call) RunAndReturn(run func() domain.ID) *MockChannel_GetID_Call {
+	_c.Call.Return(run)
+	return _c
 }

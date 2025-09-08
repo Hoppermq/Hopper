@@ -88,4 +88,3 @@ func (mgr *Manager) RemoveContainerFromTopic(
 ) {
 	mgr.Registry.Unregister(topic, containerID)
 }
-

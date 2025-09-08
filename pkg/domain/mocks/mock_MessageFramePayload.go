@@ -218,6 +218,50 @@ func (_c *MockMessageFramePayload_GetMessageID_Call) RunAndReturn(run func() dom
 	return _c
 }
 
+// GetSourceID provides a mock function for the type MockMessageFramePayload
+func (_mock *MockMessageFramePayload) GetSourceID() domain.ID {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSourceID")
+	}
+
+	var r0 domain.ID
+	if returnFunc, ok := ret.Get(0).(func() domain.ID); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(domain.ID)
+	}
+	return r0
+}
+
+// MockMessageFramePayload_GetSourceID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSourceID'
+type MockMessageFramePayload_GetSourceID_Call struct {
+	*mock.Call
+}
+
+// GetSourceID is a helper method to define mock.On call
+func (_e *MockMessageFramePayload_Expecter) GetSourceID() *MockMessageFramePayload_GetSourceID_Call {
+	return &MockMessageFramePayload_GetSourceID_Call{Call: _e.mock.On("GetSourceID")}
+}
+
+func (_c *MockMessageFramePayload_GetSourceID_Call) Run(run func()) *MockMessageFramePayload_GetSourceID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockMessageFramePayload_GetSourceID_Call) Return(iD domain.ID) *MockMessageFramePayload_GetSourceID_Call {
+	_c.Call.Return(iD)
+	return _c
+}
+
+func (_c *MockMessageFramePayload_GetSourceID_Call) RunAndReturn(run func() domain.ID) *MockMessageFramePayload_GetSourceID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetTopic provides a mock function for the type MockMessageFramePayload
 func (_mock *MockMessageFramePayload) GetTopic() string {
 	ret := _mock.Called()
