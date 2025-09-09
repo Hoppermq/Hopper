@@ -168,19 +168,16 @@ func (b *Broker) getContainerForFrame(frame domain.Frame) *container.Container {
 
 func (b *Broker) createFrameSendCallback() func(context.Context, domain.Frame, domain.ID) error {
 	return func(ctx context.Context, frame domain.Frame, clientID domain.ID) error {
-		// Get client connection
 		client := b.clientManager.GetClient(clientID)
 		if client == nil {
 			return fmt.Errorf("client not found: %s", clientID)
 		}
 
-		// Serialize frame
 		data, err := b.Serializer.SerializeFrame(frame)
 		if err != nil {
 			return fmt.Errorf("failed to serialize frame: %w", err)
 		}
 
-		// Create send message event
 		sendMsgEvt := &events.SendMessageEvent{
 			ClientID:  clientID,
 			Conn:      client.Conn,
