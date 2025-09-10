@@ -53,7 +53,6 @@ func TestContainer_HandleConnectFrame(t *testing.T) {
 		container.State = domain.ContainerCreated
 
 		mockFrame := mocks.NewMockFrame(t)
-		// No expectations since error should occur before frame is used
 
 		callbackCount := 0
 		testCallback := func(ctx context.Context, frame domain.Frame, clientID domain.ID) error {
@@ -100,7 +99,6 @@ func TestContainer_HandleOpenRcvdFrame(t *testing.T) {
 		container.State = domain.ContainerCreated
 
 		mockFrame := mocks.NewMockFrame(t)
-		// No expectations since error should occur before frame is used
 
 		err := container.HandleOpenRcvdFrame(mockFrame)
 
@@ -145,7 +143,6 @@ func TestContainer_HandleSubscribeFrame(t *testing.T) {
 		container.State = domain.ContainerOpenSent
 
 		mockFrame := mocks.NewMockFrame(t)
-		// No expectations since error should occur before frame is used
 
 		testCallback := func(ctx context.Context, frame domain.Frame, clientID domain.ID) error {
 			return nil

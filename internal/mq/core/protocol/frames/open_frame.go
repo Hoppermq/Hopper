@@ -48,7 +48,6 @@ func (ofp *OpenFramePayload) Sizer() uint16 {
 		headerSize = ofp.Header.Sizer()
 	}
 
-	// Calculate size of IDs (assuming they serialize to known sizes)
 	dataSize := uint16(len(ofp.SourceID) + len(ofp.AssignedContainerID))
 	return headerSize + dataSize
 }

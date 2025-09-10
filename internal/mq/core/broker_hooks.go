@@ -32,7 +32,6 @@ func (b *Broker) onClientDisconnect(ctx context.Context, ch <-chan domain.Event)
 			if !ok {
 				return
 			}
-			// Handle both event types for backward compatibility
 			if c, ok := evt.(*events.ClientDisconnectEvent); ok {
 				b.handleConnectionClosed(ctx, c)
 			} else if c, ok := evt.(*events.ClientDisconnectedEvent); ok {
