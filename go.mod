@@ -11,7 +11,7 @@ require (
 	github.com/knadh/koanf/providers/fs v1.0.0
 	github.com/knadh/koanf/v2 v2.2.2
 	github.com/stretchr/testify v1.11.1
-	github.com/zixyos/glog v0.0.2
+	github.com/zixyos/glog v0.1.0
 	github.com/zixyos/goloader v0.1.0
 )
 
