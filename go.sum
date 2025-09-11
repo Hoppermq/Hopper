@@ -118,6 +118,8 @@ github.com/ugorji/go/codec v1.2.12 h1:9LC83zGrHhuUA9l16C9AHXAqEV/2wBQ4nkvumAE65E
 github.com/ugorji/go/codec v1.2.12/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
 github.com/zixyos/glog v0.0.0-20250115212722-50b09311b91f h1:pZ32w17qiWleE3SfCsXg/ytQOL0I33k4CuiZUvMvgUY=
 github.com/zixyos/glog v0.0.0-20250115212722-50b09311b91f/go.mod h1:kuv28tCAyEUUW34Q1E4xB3HZhVO0LQmJF23doGuvvTA=
+github.com/zixyos/glog v0.0.2 h1:Tsd8ERw53iCVn8FJ6yi9KmoY9wwhRt4hum9ijFeBGIw=
+github.com/zixyos/glog v0.0.2/go.mod h1:kuv28tCAyEUUW34Q1E4xB3HZhVO0LQmJF23doGuvvTA=
 github.com/zixyos/goloader v0.1.0 h1:UeyTbtihglGd14SLYnFoEFEfbcSW+/YZRo/B5leGntI=
 github.com/zixyos/goloader v0.1.0/go.mod h1:602BhUpK+RqYppoubznLqUeO82j4tc7tR7GMg9/1UXw=
 golang.org/x/arch v0.0.0-20210923205945-b76863e36670/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
