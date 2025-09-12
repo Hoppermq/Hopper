@@ -64,7 +64,7 @@ func NewHTTPServer(opts ...Option) *HTTP {
 	}
 
 	httpServer.server = &http.Server{
-		Addr:         ":8080",
+		Addr:         ":8383",
 		Handler:      httpServer.engine,
 		ReadTimeout:  10,
 		WriteTimeout: 10,
