@@ -128,6 +128,8 @@ github.com/zixyos/goloader v0.1.0 h1:UeyTbtihglGd14SLYnFoEFEfbcSW+/YZRo/B5leGntI
 github.com/zixyos/goloader v0.1.0/go.mod h1:602BhUpK+RqYppoubznLqUeO82j4tc7tR7GMg9/1UXw=
 github.com/zixyos/goloader v0.1.4 h1:9E5jJj8z0cuSOiJWbszs4IxQ9hxyY3sViFU9kdmmtto=
 github.com/zixyos/goloader v0.1.4/go.mod h1:602BhUpK+RqYppoubznLqUeO82j4tc7tR7GMg9/1UXw=
+github.com/zixyos/goloader v0.2.0 h1:UXp34U8thWc8SWJ96zTsNwcDcqDomdT8+lGJpDV+iq4=
+github.com/zixyos/goloader v0.2.0/go.mod h1:602BhUpK+RqYppoubznLqUeO82j4tc7tR7GMg9/1UXw=
 golang.org/x/arch v0.0.0-20210923205945-b76863e36670/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
 golang.org/x/arch v0.8.0 h1:3wRIsP3pM4yUptoR96otTUOXI367OS0+c9eeRi9doIc=
 golang.org/x/arch v0.8.0/go.mod h1:FEVrYAQjsQXMVJ1nsMoVVXPZg6p2JE2mx8psSWTDQys=
