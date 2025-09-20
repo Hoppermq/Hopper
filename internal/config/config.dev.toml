@@ -9,10 +9,10 @@ test = "dev"
 [server]
 # Server binding
 host = "0.0.0.0"              # Bind to all interfaces
-port = 9091                   # Main TCP port for MQ connections
+port = 5672                   # Main TCP port for MQ connections
 # Additional ports for different protocols
-admin_port = 9092             # Admin/management interface
-metrics_port = 8080           # Metrics endpoint
+admin_port = 9292             # Admin/management interface
+metrics_port = 8888           # Metrics endpoint
 health_port = 8081            # Health check endpoint
 
 # Connection limits
