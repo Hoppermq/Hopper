@@ -121,6 +121,14 @@ type Configuration struct {
 	EventBus struct {
 		MaxBuffer uint8 `koanf:"max_buffer"`
 	} `koanf:"eventbus"`
+
+	Server struct {
+		Host        string `koanf:"host"`
+		Port        uint16 `koanf:"port"`
+		AdminPort   uint16 `koanf:"admin_port"`
+		MetricsPort uint16 `koanf:"metrics_port"`
+		HealthPort  uint16 `koanf:"health_port"`
+	} `koanf:"server"`
 }
 
 // New create a new configuration from files and env.

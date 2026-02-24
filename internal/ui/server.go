@@ -4,13 +4,18 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hoppermq/hopper/internal/config"
 	"github.com/hoppermq/hopper/internal/ui/routes"
 	"github.com/hoppermq/hopper/pkg/domain"
 )
 
 type HTTPServer struct {
+	// could be optimized with the sub struct directly.
+	config *config.Configuration
+
 	logger *slog.Logger
 	engine *gin.Engine
 	server *http.Server
@@ -30,6 +35,12 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
+func WithConfig(conf *config.Configuration) Option {
+	return func(s *HTTPServer) {
+		s.config = conf
+	}
+}
+
 func NewHTTPServer(opts ...Option) *HTTPServer {
 	httpServer := &HTTPServer{}
 
@@ -38,7 +49,7 @@ func NewHTTPServer(opts ...Option) *HTTPServer {
 	}
 
 	httpServer.server = &http.Server{
-		Addr:    ":8090",
+		Addr:    ":" + strconv.Itoa(int(httpServer.config.Server.AdminPort)),
 		Handler: httpServer.engine,
 	}
 
