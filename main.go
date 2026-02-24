@@ -80,12 +80,14 @@ func main() {
 	httpServer := httpService.NewHTTPServer(
 		httpService.WithLogger(logger),
 		httpService.WithEngine(httpEngine),
+		httpService.WithConfiguration(cfg),
 	)
 
 	uiEngine := gin.New()
 	uiService := ui.NewHTTPServer(
 		ui.WithLogger(logger),
 		ui.WithEngine(uiEngine),
+		ui.WithConfig(cfg),
 	)
 
 	app := application.New(

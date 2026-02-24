@@ -5,6 +5,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/hopper/internal/config"
@@ -64,7 +65,7 @@ func NewHTTPServer(opts ...Option) *HTTP {
 	}
 
 	httpServer.server = &http.Server{
-		Addr:         ":8080",
+		Addr:         ":" + strconv.Itoa(int(httpServer.config.Server.MetricsPort)),
 		Handler:      httpServer.engine,
 		ReadTimeout:  10,
 		WriteTimeout: 10,

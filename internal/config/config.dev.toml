@@ -12,7 +12,7 @@ host = "0.0.0.0"              # Bind to all interfaces
 port = 9091                   # Main TCP port for MQ connections
 # Additional ports for different protocols
 admin_port = 9092             # Admin/management interface
-metrics_port = 8080           # Metrics endpoint
+metrics_port = 8082           # Metrics endpoint
 health_port = 8081            # Health check endpoint
 
 # Connection limits
