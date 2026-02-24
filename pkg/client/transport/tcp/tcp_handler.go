@@ -9,6 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/hoppermq/hopper/pkg/domain"
 )
 
 type HealthStatus int32
@@ -29,8 +31,8 @@ const (
 	CircuitHalfOpen
 )
 
-// TCPClient provides a production-grade TCP client service with health monitoring and auto-reconnection
-type TCPClient struct {
+// Client  provides a production-grade TCP client service with health monitoring and auto-reconnection
+type Client struct {
 	conn   net.Conn
 	connMu sync.RWMutex
 
@@ -50,12 +52,12 @@ type TCPClient struct {
 	}
 
 	health struct {
-		status           int32
-		lastConnected    time.Time
-		lastError        error
+		status            int32
+		lastConnected     time.Time
+		lastError         error
 		consecutiveErrors int32
-		totalConnections int64
-		totalErrors      int64
+		totalConnections  int64
+		totalErrors       int64
 	}
 
 	circuit struct {
@@ -72,18 +74,18 @@ type TCPClient struct {
 	wg sync.WaitGroup
 }
 
-type Option func(*TCPClient)
+type Option func(*Client)
 
 // WithLogger sets the logger for the TCP client
 func WithLogger(logger *slog.Logger) Option {
-	return func(c *TCPClient) {
+	return func(c *Client) {
 		c.logger = logger
 	}
 }
 
 // WithAddress sets the target address and port
 func WithAddress(address string, port int) Option {
-	return func(c *TCPClient) {
+	return func(c *Client) {
 		c.config.address = address
 		c.config.port = port
 	}
@@ -91,7 +93,7 @@ func WithAddress(address string, port int) Option {
 
 // WithRetryConfig sets the retry configuration
 func WithRetryConfig(maxRetries int, delay time.Duration, backoff float64, maxWait time.Duration) Option {
-	return func(c *TCPClient) {
+	return func(c *Client) {
 		c.config.maxRetries = maxRetries
 		c.config.retryDelay = delay
 		c.config.retryBackoff = backoff
@@ -101,21 +103,26 @@ func WithRetryConfig(maxRetries int, delay time.Duration, backoff float64, maxWa
 
 // WithHealthConfig sets health monitoring configuration
 func WithHealthConfig(interval time.Duration, circuitFailures int, circuitTimeout time.Duration) Option {
-	return func(c *TCPClient) {
+	return func(c *Client) {
 		c.config.healthCheckInterval = interval
 		c.config.circuitFailures = circuitFailures
 		c.config.circuitTimeout = circuitTimeout
 	}
 }
 
-// Start initializes and starts the TCP client service
-func (t *TCPClient) Start(ctx context.Context) error {
+func (t *Client) Run(ctx context.Context) error {
 	ctx, t.cancel = context.WithCancel(ctx)
 
 	t.setHealthStatus(StatusConnecting)
 
 	t.wg.Add(3)
-	go t.connectionManager(ctx)
+	go func() {
+		err := t.HandleConnection(ctx)
+		if err != nil {
+			t.logger.Warn("Error handling connection: ", err)
+			<-ctx.Done()
+		}
+	}()
 	go t.healthMonitor(ctx)
 	go t.messageHandler(ctx)
 
@@ -133,7 +140,7 @@ func (t *TCPClient) Start(ctx context.Context) error {
 }
 
 // Stop gracefully shuts down the TCP client service
-func (t *TCPClient) Stop(ctx context.Context) error {
+func (t *Client) Stop(ctx context.Context) error {
 	if t.cancel != nil {
 		t.cancel()
 	}
@@ -155,30 +162,53 @@ func (t *TCPClient) Stop(ctx context.Context) error {
 	}
 }
 
+func (t *Client) HandleConnection(ctx context.Context) error {
+	defer t.wg.Done()
+
+	ticker := time.NewTicker(t.config.reconnectInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err() // not sure.
+		case <-ticker.C:
+			if !t.isConnected() && t.shouldAttemptConnection() {
+				t.attemptConnection(ctx)
+			}
+		}
+	}
+}
+
+func (t *Client) RegisterEventBus(eb domain.IEventBus) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Name returns the service name
-func (t *TCPClient) Name() string {
+func (t *Client) Name() string {
 	return "tcp_transport_service"
 }
 
 // IsHealthy returns true if the client is in a healthy state
-func (t *TCPClient) IsHealthy() bool {
+func (t *Client) IsHealthy() bool {
 	status := HealthStatus(atomic.LoadInt32(&t.health.status))
 	return status == StatusConnected
 }
 
 // IsDegraded returns true if the client is degraded but operational
-func (t *TCPClient) IsDegraded() bool {
+func (t *Client) IsDegraded() bool {
 	status := HealthStatus(atomic.LoadInt32(&t.health.status))
 	return status == StatusDegraded
 }
 
 // GetHealthStatus returns the current health status
-func (t *TCPClient) GetHealthStatus() HealthStatus {
+func (t *Client) GetHealthStatus() HealthStatus {
 	return HealthStatus(atomic.LoadInt32(&t.health.status))
 }
 
 // GetHealthMetrics returns health metrics
-func (t *TCPClient) GetHealthMetrics() map[string]interface{} {
+func (t *Client) GetHealthMetrics() map[string]interface{} {
 	t.connMu.RLock()
 	defer t.connMu.RUnlock()
 
@@ -193,25 +223,7 @@ func (t *TCPClient) GetHealthMetrics() map[string]interface{} {
 	}
 }
 
-func (t *TCPClient) connectionManager(ctx context.Context) {
-	defer t.wg.Done()
-
-	ticker := time.NewTicker(t.config.reconnectInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			if !t.isConnected() && t.shouldAttemptConnection() {
-				t.attemptConnection(ctx)
-			}
-		}
-	}
-}
-
-func (t *TCPClient) healthMonitor(ctx context.Context) {
+func (t *Client) healthMonitor(ctx context.Context) {
 	defer t.wg.Done()
 
 	ticker := time.NewTicker(t.config.healthCheckInterval)
@@ -227,7 +239,7 @@ func (t *TCPClient) healthMonitor(ctx context.Context) {
 	}
 }
 
-func (t *TCPClient) messageHandler(ctx context.Context) {
+func (t *Client) messageHandler(ctx context.Context) {
 	defer t.wg.Done()
 
 	buffer := make([]byte, 4096)
@@ -245,11 +257,13 @@ func (t *TCPClient) messageHandler(ctx context.Context) {
 			continue
 		}
 
-		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-		n, err := conn.Read(buffer)
+		if err := conn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
+			t.logger.Warn("error while setting read deadline", "error", err)
+		}
 
+		n, err := conn.Read(buffer)
 		if err != nil {
-			t.handleConnectionError(err)
+			t.HandleConnectionError(err)
 			continue
 		}
 
@@ -261,7 +275,7 @@ func (t *TCPClient) messageHandler(ctx context.Context) {
 	}
 }
 
-func (t *TCPClient) attemptConnection(ctx context.Context) {
+func (t *Client) attemptConnection(ctx context.Context) {
 	if !t.shouldAttemptConnection() {
 		return
 	}
@@ -272,7 +286,7 @@ func (t *TCPClient) attemptConnection(ctx context.Context) {
 
 	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
 	if err != nil {
-		t.handleConnectionError(err)
+		t.HandleConnectionError(err)
 		return
 	}
 
@@ -286,7 +300,7 @@ func (t *TCPClient) attemptConnection(ctx context.Context) {
 	t.logger.Info("connected successfully", "address", addr)
 }
 
-func (t *TCPClient) handleConnectionError(err error) {
+func (t *Client) HandleConnectionError(err error) {
 	t.closeConnection()
 
 	consecutive := atomic.AddInt32(&t.health.consecutiveErrors, 1)
@@ -307,7 +321,7 @@ func (t *TCPClient) handleConnectionError(err error) {
 		"circuit_state", CircuitState(atomic.LoadInt32(&t.circuit.state)))
 }
 
-func (t *TCPClient) performHealthCheck() {
+func (t *Client) performHealthCheck() {
 	conn := t.getConnection()
 	if conn == nil {
 		if t.GetHealthStatus() == StatusConnected {
@@ -320,7 +334,7 @@ func (t *TCPClient) performHealthCheck() {
 	conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
 }
 
-func (t *TCPClient) shouldAttemptConnection() bool {
+func (t *Client) shouldAttemptConnection() bool {
 	circuitState := CircuitState(atomic.LoadInt32(&t.circuit.state))
 
 	switch circuitState {
@@ -333,7 +347,7 @@ func (t *TCPClient) shouldAttemptConnection() bool {
 	}
 }
 
-func (t *TCPClient) recordCircuitFailure() {
+func (t *Client) recordCircuitFailure() {
 	failures := atomic.AddInt32(&t.circuit.failures, 1)
 	t.circuit.lastFailure = time.Now()
 
@@ -344,32 +358,32 @@ func (t *TCPClient) recordCircuitFailure() {
 	}
 }
 
-func (t *TCPClient) resetCircuit() {
+func (t *Client) resetCircuit() {
 	atomic.StoreInt32(&t.circuit.state, int32(CircuitClosed))
 	atomic.StoreInt32(&t.circuit.failures, 0)
 }
 
-func (t *TCPClient) resetConsecutiveErrors() {
+func (t *Client) resetConsecutiveErrors() {
 	atomic.StoreInt32(&t.health.consecutiveErrors, 0)
 }
 
-func (t *TCPClient) setHealthStatus(status HealthStatus) {
+func (t *Client) setHealthStatus(status HealthStatus) {
 	atomic.StoreInt32(&t.health.status, int32(status))
 }
 
-func (t *TCPClient) isConnected() bool {
+func (t *Client) isConnected() bool {
 	t.connMu.RLock()
 	defer t.connMu.RUnlock()
 	return t.conn != nil
 }
 
-func (t *TCPClient) getConnection() net.Conn {
+func (t *Client) getConnection() net.Conn {
 	t.connMu.RLock()
 	defer t.connMu.RUnlock()
 	return t.conn
 }
 
-func (t *TCPClient) setConnection(conn net.Conn) {
+func (t *Client) setConnection(conn net.Conn) {
 	t.connMu.Lock()
 	defer t.connMu.Unlock()
 
@@ -379,7 +393,7 @@ func (t *TCPClient) setConnection(conn net.Conn) {
 	t.conn = conn
 }
 
-func (t *TCPClient) closeConnection() {
+func (t *Client) closeConnection() {
 	t.connMu.Lock()
 	defer t.connMu.Unlock()
 
@@ -391,8 +405,8 @@ func (t *TCPClient) closeConnection() {
 }
 
 // NewTCPClient creates a new production-grade TCP client service
-func NewTCPClient(opts ...Option) *TCPClient {
-	t := &TCPClient{
+func NewTCPClient(opts ...Option) *Client {
+	t := &Client{
 		done:    make(chan struct{}),
 		errChan: make(chan error, 1),
 		config: struct {

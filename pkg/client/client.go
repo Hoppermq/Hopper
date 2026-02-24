@@ -5,12 +5,10 @@ import (
 	"context"
 	"log/slog"
 	"sync"
-	"time"
 
 	"github.com/hoppermq/hopper/pkg/client/config"
 	"github.com/hoppermq/hopper/pkg/client/transport/tcp"
 	"github.com/hoppermq/hopper/pkg/domain"
-	"github.com/zixyos/glog"
 )
 
 type ClientState bool
@@ -33,7 +31,41 @@ type Client struct {
 	wg     sync.WaitGroup
 	cancel context.CancelFunc
 
-	logger slog.Logger
+	logger *slog.Logger
+}
+
+// Option type represent the injection function.
+type Option func(*Client)
+
+func WithConfig(cfg *config.ClientConfig) Option {
+	return func(c *Client) {}
+}
+
+func WithLogger(logger *slog.Logger) Option {
+	return func(c *Client) {
+		c.logger = logger
+	}
+}
+
+func withTransport() Option {
+	return func(c *Client) {
+		tcpClient := tcp.NewTCPClient(
+			tcp.WithLogger(c.logger),
+		)
+		c.transport = tcpClient
+	}
+}
+
+// NewClient create a new client.
+func NewClient(opts ...Option) *Client {
+	c := &Client{}
+
+	opts = append(opts, withTransport())
+	for _, opts := range opts {
+		opts(c)
+	}
+
+	return c
 }
 
 // Run start the client sdk workers.
@@ -42,7 +74,9 @@ func (c *Client) Run(ctx context.Context) error {
 	ctx, c.cancel = context.WithCancel(ctx)
 
 	c.setState(true)
-	c.transport.Run(ctx)
+	if err := c.transport.Run(ctx); err != nil {
+		return err
+	}
 
 	<-ctx.Done()
 	return nil
@@ -70,40 +104,4 @@ func (c *Client) Stop(ctx context.Context) error {
 
 func (c *Client) setState(state ClientState) {
 	c.state = state
-}
-
-// NewClient create a new client.
-func NewClient() *Client {
-	ctx := context.Background()
-	conf, err := config.LoadConfig()
-	if err != nil {
-		panic(err)
-	}
-
-	logger, err := glog.New(
-		glog.WithLevel(slog.LevelDebug),
-		glog.WithStyle(glog.WithErrorStyle()),
-		glog.WithJsonFormat(),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	logger.Info("config loaded", "configuration", conf)
-
-	tcpClient := tcp.NewTCPClient(
-		tcp.WithLogger(logger),
-		tcp.WithAddress("0.0.0.0", 5672),
-		tcp.WithHealthConfig(30*time.Second, 5, 60*time.Second),
-	)
-
-	if err := tcpClient.Start(ctx); err != nil {
-		logger.Error("client failed", "error", err)
-	}
-
-	if status := tcpClient.IsHealthy(); !status {
-		logger.Warn("client is unhealthy", "status", "unhealthy")
-	}
-
-	return &Client{}
 }
