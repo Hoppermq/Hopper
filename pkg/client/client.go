@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/hoppermq/hopper/pkg/client/config"
+	"github.com/hoppermq/hopper/pkg/client/transport/tcp"
 	"github.com/hoppermq/hopper/pkg/domain"
-	"github.com/zixyos/glog"
 )
 
 type ClientState bool
@@ -31,19 +31,58 @@ type Client struct {
 	wg     sync.WaitGroup
 	cancel context.CancelFunc
 
-	logger slog.Logger
+	logger *slog.Logger
 }
 
+// Option type represent the injection function.
+type Option func(*Client)
+
+func WithConfig(cfg *config.ClientConfig) Option {
+	return func(c *Client) {}
+}
+
+func WithLogger(logger *slog.Logger) Option {
+	return func(c *Client) {
+		c.logger = logger
+	}
+}
+
+func withTransport() Option {
+	return func(c *Client) {
+		tcpClient := tcp.NewTCPClient(
+			tcp.WithLogger(c.logger),
+		)
+		c.transport = tcpClient
+	}
+}
+
+// NewClient create a new client.
+func NewClient(opts ...Option) *Client {
+	c := &Client{}
+
+	opts = append(opts, withTransport())
+	for _, opts := range opts {
+		opts(c)
+	}
+
+	return c
+}
+
+// Run start the client sdk workers.
 func (c *Client) Run(ctx context.Context) error {
 	c.logger.Info("starting hopperMQ client")
 	ctx, c.cancel = context.WithCancel(ctx)
 
 	c.setState(true)
+	if err := c.transport.Run(ctx); err != nil {
+		return err
+	}
 
 	<-ctx.Done()
 	return nil
 }
 
+// Stop gracefully shutdown the client sdk.
 func (c *Client) Stop(ctx context.Context) error {
 	c.logger.Info("stopping hopperMQ client", "client_id", c.id)
 	c.setState(false)
@@ -65,25 +104,4 @@ func (c *Client) Stop(ctx context.Context) error {
 
 func (c *Client) setState(state ClientState) {
 	c.state = state
-}
-
-// NewClient create a new client.
-func NewClient() *Client {
-	conf, err := config.LoadConfig()
-	if err != nil {
-		panic(err)
-	}
-
-	logger, err := glog.New(
-		glog.WithLevel(slog.LevelDebug),
-		glog.WithStyle(glog.WithErrorStyle()),
-		glog.WithFormat(glog.JSONFormatter),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	logger.Info("configuration loaded", "configuration", conf.Client.Name)
-
-	return &Client{}
 }

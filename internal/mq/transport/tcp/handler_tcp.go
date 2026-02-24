@@ -59,7 +59,7 @@ func NewTCP(ctx context.Context, opts ...Option) (*TCP, error) {
 		}
 	}
 
-	l, err := handlerConfig.lconf.Listen(ctx, "tcp", ":9091")
+	l, err := handlerConfig.lconf.Listen(ctx, "tcp", ":5672")
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (t *TCP) Run(ctx context.Context) error {
 	})
 
 	go func() {
-		t.logger.Info("TCP server running", "port", 9091)
+		t.logger.Info("TCP server running", "port", t.Listener.Addr().String())
 		if err := t.HandleConnection(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			t.logger.Warn("TCP Handler failed", "error", err)
 		}
